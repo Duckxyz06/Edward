@@ -5,8 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>EdWords – Sentence Battle</title>
   <meta name="description" content="Trò chơi thẻ bài đối kháng luyện từ vựng và ngữ pháp tiếng Anh cho sinh viên không chuyên – Trường Đại học Đồng Tháp." />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Cinzel:wght@600;700;900&family=Marcellus&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/fonts.css" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
@@ -15,6 +14,10 @@
   <!-- ============ MÀN HÌNH CHÍNH ============ -->
   <section id="screen-title" class="screen active">
     <div class="title-bg"></div>
+    <div class="title-audio">
+      <button class="orb-btn" data-music-toggle title="Tắt nhạc nền">🎵</button>
+      <input type="range" min="0" max="100" data-music-volume aria-label="Âm lượng nhạc nền" />
+    </div>
     <div class="title-wrap">
       <h1 class="logo"><img src="assets/logo.png" alt="EdWords – Sentence Duel" /></h1>
       <p class="tagline">Ghép câu tiếng Anh đúng · Vận dụng từ vựng &amp; ngữ pháp · Vượt qua đối thủ</p>
@@ -57,6 +60,7 @@
         <label class="field"><span>Thời gian trận (buổi 45–60 phút)</span>
           <select name="matchTime"><option value="0" selected>Không giới hạn</option><option value="600">10 phút</option><option value="900">15 phút</option><option value="1200">20 phút</option></select>
         </label>
+        <label class="field wide"><span>Âm lượng nhạc nền</span><input type="range" min="0" max="100" data-music-volume /></label>
         <label class="check"><input type="checkbox" name="assist" /> <span>Chế độ luyện tập: hiện gợi ý ngữ pháp khi đang ghép câu</span></label>
         <label class="check"><input type="checkbox" name="speaking" /> <span>Luyện nói: đọc to câu vào micro trước khi chấm <small id="mic-note"></small></span></label>
         <div class="wide actions-row"><button type="submit" class="btn big primary">Bắt đầu ⚔️</button></div>
@@ -141,7 +145,8 @@
       <div id="match-timer" class="match-timer"></div>
       <div class="hud-right">
         <button class="orb-btn" id="btn-help" title="Luật chơi">?</button>
-        <button class="orb-btn" id="btn-mute" title="Bật/tắt âm thanh">🔈</button>
+        <button class="orb-btn" data-music-toggle title="Tắt nhạc nền">🎵</button>
+        <button class="orb-btn" id="btn-mute" title="Bật/tắt hiệu ứng âm thanh và giọng đọc">🔈</button>
         <button class="orb-btn" id="btn-quit" title="Rời trận về màn hình chính">⌂</button>
       </div>
     </header>
@@ -215,6 +220,7 @@
 <script src="js/data.js"></script>
 <script src="js/grammar.js"></script>
 <script src="js/speech.js"></script>
+<script src="js/music.js"></script>
 <script src="js/ai.js"></script>
 <script src="js/game.js"></script>
 <script src="js/ui.js"></script>

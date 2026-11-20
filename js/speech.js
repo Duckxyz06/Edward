@@ -23,6 +23,11 @@
         u.lang = 'en-US';
         if (voice) u.voice = voice;
         u.rate = rate;
+        // hạ nhỏ nhạc nền trong lúc đọc câu
+        if (EW.Music) {
+          u.onstart = () => EW.Music.duck(true);
+          u.onend = u.onerror = () => EW.Music.duck(false);
+        }
         speechSynthesis.speak(u);
       } catch (e) { /* bỏ qua */ }
     },

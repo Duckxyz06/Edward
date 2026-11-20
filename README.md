@@ -27,7 +27,8 @@ Giao diện được dựng theo **EDWORDS UI Kit & Design System v1.1**, phong 
 
 - Bảng màu: nền midnight navy, panel kính indigo, viền kim loại vàng, ánh sáng cyan/violet.
 - Màu từng nhóm thẻ: S cyan, V violet, N amber, A green, T magenta, AUX azure, L teal, Action electric blue.
-- Font: Cinzel / Marcellus cho tiêu đề, Be Vietnam Pro cho nội dung.
+- Font hỗ trợ đầy đủ dấu tiếng Việt, đóng gói sẵn trong `assets/fonts` nên dùng được cả khi không có mạng: **Playfair Display** cho tiêu đề, **Be Vietnam Pro** cho nội dung (giấy phép SIL OFL).
+- Nhạc nền tự sinh bằng WebAudio (`js/music.js`): bản êm cho menu, bản dồn dập hơn cho trận đấu. Không dùng file nhạc nên không lo bản quyền. Nhạc tự nhỏ lại khi máy đọc câu. Bật/tắt bằng nút 🎵, chỉnh âm lượng ở màn hình chính hoặc màn hình thiết lập.
 - Thành phần: thanh HUD trên cùng, widget người chơi (chân dung, khiên điểm, tinh thể tiến độ), bảng đá *Sentence Zone* có các lane gợi ý, nút **End Turn** khung vàng, hiệu ứng vệt sáng cyan–gold khi câu đúng.
 
 Ảnh trong `assets/` (logo, chân dung, khung End Turn, cảnh nền) được cắt từ gói UI Kit. Mọi chữ, số và nút đều được dựng lại bằng HTML/CSS như tài liệu hướng dẫn khuyến nghị.
@@ -43,7 +44,9 @@ js/grammar.js       Bộ kiểm tra ngữ pháp ("quản trò" tự động)
 js/ai.js            Đối thủ máy
 js/game.js          Luật chơi, trạng thái trận
 js/ui.js            Vẽ sân đấu và các tương tác
-js/speech.js        Đọc câu, nhận dạng giọng nói, âm thanh
+js/speech.js        Đọc câu, nhận dạng giọng nói, hiệu ứng âm thanh
+js/music.js         Nhạc nền tự sinh
+css/fonts.css       Khai báo font tiếng Việt
 js/main.js          Thiết lập trận, thư viện thẻ, lịch sử, kết quả
 tests/grammar.test.js
 ```

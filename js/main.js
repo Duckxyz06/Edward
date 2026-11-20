@@ -11,6 +11,7 @@
   };
 
   function go(name) {
+    EW.Music.setMood(name === 'duel' ? 'battle' : 'menu');
     document.querySelectorAll('.screen').forEach((s) => s.classList.toggle('active', s.id === 'screen-' + name));
     if (name === 'library') renderLibrary();
     if (name === 'history') renderHistory();
@@ -21,6 +22,19 @@
     const b = e.target.closest('[data-go]');
     if (b) go(b.dataset.go);
   });
+
+  // ---------- Nhạc nền ----------
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('[data-music-toggle]')) { EW.Music.toggle(); EW.UI.toast(EW.Music.on ? '🎵 Đã bật nhạc nền' : '🔇 Đã tắt nhạc nền'); }
+  });
+  document.addEventListener('input', (e) => {
+    if (e.target.matches('[data-music-volume]')) {
+      EW.Music.setVolume(e.target.value / 100);
+      if (!EW.Music.on && e.target.value > 0) EW.Music.toggle();
+      EW.Music.syncButtons();
+    }
+  });
+  EW.Music.syncButtons();
 
   // ---------- Thiết lập ----------
   const topicSel = $('#topic-select');
