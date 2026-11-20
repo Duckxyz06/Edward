@@ -6,7 +6,7 @@
   <title>EdWords – Sentence Battle</title>
   <meta name="description" content="Trò chơi thẻ bài đối kháng luyện từ vựng và ngữ pháp tiếng Anh cho sinh viên không chuyên – Trường Đại học Đồng Tháp." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;800&family=Cinzel:wght@700;900&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Cinzel:wght@600;700;900&family=Marcellus&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
@@ -16,11 +16,8 @@
   <section id="screen-title" class="screen active">
     <div class="title-bg"></div>
     <div class="title-wrap">
-      <div class="logo">
-        <div class="logo-main">EdWords</div>
-        <div class="logo-sub">SENTENCE BATTLE</div>
-      </div>
-      <p class="tagline">Đấu thẻ bài · Ghép câu tiếng Anh · Giành chiến thắng</p>
+      <h1 class="logo"><img src="assets/logo.png" alt="EdWords – Sentence Duel" /></h1>
+      <p class="tagline">Ghép câu tiếng Anh đúng · Vận dụng từ vựng &amp; ngữ pháp · Vượt qua đối thủ</p>
       <nav class="menu">
         <button class="btn-menu primary" data-go="setup">⚔️ Đấu với máy</button>
         <button class="btn-menu" data-go="rules">📜 Luật chơi</button>
@@ -136,29 +133,46 @@
 
   <!-- ============ SÂN ĐẤU ============ -->
   <section id="screen-duel" class="screen">
-    <aside id="detail" class="detail"></aside>
+    <header id="hud" class="hud">
+      <div class="hud-left">
+        <img class="hud-logo" src="assets/logo.png" alt="EdWords" />
+        <div class="hud-plaque"><span class="hud-ico">⚔️</span><b>Battle Arena</b><span class="hud-sep"></span><span id="hud-mode">Đấu với máy</span></div>
+      </div>
+      <div id="match-timer" class="match-timer"></div>
+      <div class="hud-right">
+        <button class="orb-btn" id="btn-help" title="Luật chơi">?</button>
+        <button class="orb-btn" id="btn-mute" title="Bật/tắt âm thanh">🔈</button>
+        <button class="orb-btn" id="btn-quit" title="Rời trận về màn hình chính">⌂</button>
+      </div>
+    </header>
+
+    <aside id="detail" class="detail gold-panel"></aside>
 
     <main id="field">
+      <div class="arena-floor"></div>
       <div class="side opp">
-        <div class="hand opp-hand" id="opp-hand"></div>
         <div class="row">
           <div class="pinfo" id="opp-info"></div>
           <div class="zone-wrap"><div class="zone-label">Thẻ cố định</div><div class="zone fixed" id="opp-fixed"></div></div>
           <div class="zone-wrap"><div class="zone-label">Úp</div><div class="zone setz" id="opp-set"></div></div>
+          <div class="zone-wrap"><div class="zone-label">Tay</div><div class="hand opp-hand" id="opp-hand"></div></div>
           <div class="piles" id="opp-piles"></div>
         </div>
       </div>
 
       <div id="board">
         <div id="phase-bar"></div>
-        <div id="sentence-zone" class="sentence-zone"></div>
-        <div id="sentence-preview" class="preview"></div>
-        <div id="assist" class="assist"></div>
+        <div class="tablet">
+          <div class="tablet-plaque"><span>Sentence Zone</span></div>
+          <div class="tablet-sub">Ghép một câu tiếng Anh đúng để ghi điểm!</div>
+          <div id="sentence-zone" class="sentence-zone"></div>
+          <div id="sentence-preview" class="preview"></div>
+          <div id="assist" class="assist"></div>
+        </div>
         <div id="board-actions" class="board-actions">
           <button class="btn" id="btn-say" title="Nghe câu">🔊 Đọc</button>
-          <button class="btn" id="btn-clear">↺ Xóa câu</button>
-          <button class="btn primary" id="btn-submit">✔ Xác nhận câu</button>
-          <button class="btn ghost" id="btn-end">⏭ Kết thúc lượt</button>
+          <button class="btn" id="btn-clear">↺ Hoàn tác</button>
+          <button class="btn confirm" id="btn-submit">✔ Xác nhận câu</button>
         </div>
       </div>
 
@@ -173,14 +187,12 @@
       </div>
     </main>
 
-    <aside id="sidebar">
-      <div class="side-top">
-        <div id="match-timer" class="match-timer"></div>
-        <div class="side-tools">
-          <button class="icon-btn" id="btn-mute" title="Bật/tắt âm thanh">🔈</button>
-          <button class="icon-btn" id="btn-help" title="Luật chơi">❔</button>
-          <button class="icon-btn" id="btn-quit" title="Rời trận">🏳️</button>
-        </div>
+    <aside id="sidebar" class="gold-panel">
+      <div class="end-cluster">
+        <button id="btn-end" class="end-turn" title="Kết thúc lượt">
+          <span class="end-orb"><span class="end-en">End Turn</span><span class="end-vi">Kết thúc lượt</span></span>
+        </button>
+        <div class="turn-stats" id="turn-stats"></div>
       </div>
       <div id="prompt-panel" class="prompt-panel"></div>
       <div class="log-title">Nhật ký trận đấu</div>

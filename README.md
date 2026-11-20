@@ -21,10 +21,22 @@ Có thể đăng lên GitHub Pages để sinh viên chơi qua đường link: v�
 | Ghi nhận lỗi ngôn ngữ, phiếu theo dõi | Thống kê lỗi theo 8 nhóm, xuất file CSV |
 | Điều chỉnh chủ đề và độ khó | 3 chủ đề + tổng hợp, chọn cấu trúc ngữ pháp, 3 mức độ khó của máy |
 
+## Giao diện
+
+Giao diện được dựng theo **EDWORDS UI Kit & Design System v1.1**, phong cách *Fantasy Academy × Tactical Card Duel × Premium Sci-fi HUD*:
+
+- Bảng màu: nền midnight navy, panel kính indigo, viền kim loại vàng, ánh sáng cyan/violet.
+- Màu từng nhóm thẻ: S cyan, V violet, N amber, A green, T magenta, AUX azure, L teal, Action electric blue.
+- Font: Cinzel / Marcellus cho tiêu đề, Be Vietnam Pro cho nội dung.
+- Thành phần: thanh HUD trên cùng, widget người chơi (chân dung, khiên điểm, tinh thể tiến độ), bảng đá *Sentence Zone* có các lane gợi ý, nút **End Turn** khung vàng, hiệu ứng vệt sáng cyan–gold khi câu đúng.
+
+Ảnh trong `assets/` (logo, chân dung, khung End Turn, cảnh nền) được cắt từ gói UI Kit. Mọi chữ, số và nút đều được dựng lại bằng HTML/CSS như tài liệu hướng dẫn khuyến nghị.
+
 ## Cấu trúc mã nguồn
 
 ```
 index.html          Các màn hình
+assets/             Ảnh lấy từ EDWORDS UI Kit
 css/style.css       Giao diện
 js/data.js          Ngân hàng thẻ: từ vựng, trợ động từ, thời gian, thẻ hành động (giảng viên có thể sửa)
 js/grammar.js       Bộ kiểm tra ngữ pháp ("quản trò" tự động)

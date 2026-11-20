@@ -5,6 +5,8 @@
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
   const TI = () => EW.DATA.TYPE_INFO;
+  const BACK = '<div class="back-emblem"><span class="back-book">📖</span><span class="back-name">EDWORDS</span></div>';
+  const AVATAR = { me: 'assets/avatar-player.png', ai: 'assets/avatar-rival-a.png' };
   const A_KIND = { adj: 'Tính từ', adv: 'Trạng từ', place: 'Nơi chốn' };
   const TIPS = `<div class="tips"><div class="tips-title">💡 Mẹo nhanh</div>
     <p><b>Câu cơ bản:</b> S + V (+ N) (+ A) (+ T)</p>
@@ -30,7 +32,7 @@
     const el = document.createElement('div');
     if (o.faceDown) {
       el.className = 'card back' + (o.small ? ' small' : '') + (o.tiny ? ' tiny' : '');
-      el.innerHTML = '<div class="back-logo">Ed<span>Words</span></div>';
+      el.innerHTML = BACK;
       return el;
     }
     const t = card.type;
@@ -125,6 +127,8 @@
       $('#detail').innerHTML = TIPS;
       this._seenS = new Set();
       this.startMatchTimer();
+      const c = duel.cfg;
+      $('#hud-mode').textContent = `Đấu với máy · ${EW.AI.LEVELS[c.difficulty].name} · ${c.topic === 'mixed' ? 'Tổng hợp' : EW.DATA.topics[c.topic].name}`;
     },
 
     sfx(n) { EW.sfx(n); },
@@ -176,6 +180,7 @@
       this.renderHand(me);
       this.renderPhase();
       this.renderSentence();
+      this.renderTurnStats();
       this.renderControls();
     },
 
@@ -206,20 +211,34 @@
 
     renderInfo(p, el, active) {
       const d = this.duel;
-      const pips = Array.from({ length: d.cfg.target }, (_, i) => `<span class="pip ${i < p.score ? 'on' : ''}"></span>`).join('');
-      el.className = 'pinfo' + (active ? ' active' : '');
+      const gems = Array.from({ length: d.cfg.target }, (_, i) => `<span class="gem ${i < p.score ? 'on' : ''}"></span>`).join('');
+      el.className = 'pinfo' + (active ? ' active' : '') + (p.isAI ? ' is-opp' : ' is-me');
       el.innerHTML = `
-        <div class="avatar">${p.isAI ? '🤖' : '🎓'}</div>
-        <div class="pname">${esc(p.name)}</div>
-        <div class="score"><span class="score-num">${p.score}</span><span class="score-max">/ ${d.cfg.target}</span></div>
-        <div class="pips">${pips}</div>
-        <div class="turn-timer" id="${p.isAI ? 'opp' : 'my'}-timer"></div>`;
+        <div class="portrait"><img src="${p.isAI ? AVATAR.ai : AVATAR.me}" alt="" /></div>
+        <div class="pbody">
+          <div class="nameplate"><b>${esc(p.name)}</b><small>${p.isAI ? 'Rival Scholar' : 'Learner'}</small></div>
+          <div class="pstats">
+            <div class="shield" title="Điểm câu"><span>${p.score}</span></div>
+            <div class="crystals"><span class="crys-num">💠 ${p.score}/${d.cfg.target}</span><div class="gems">${gems}</div></div>
+          </div>
+          <div class="turn-timer" id="${p.isAI ? 'opp' : 'my'}-timer"></div>
+        </div>`;
     },
 
     renderPiles(p, el) {
       el.innerHTML = `
-        <div class="pile deck" title="Bộ bài"><div class="card back small"><div class="back-logo">Ed<span>Words</span></div></div><b>${p.deck.length}</b></div>
-        <div class="pile disc" title="Bãi bài"><div class="slot small">${p.discard.length ? '🗑️' : ''}</div><b>${p.discard.length}</b></div>`;
+        <div class="pile deck" title="Bộ bài: ${p.deck.length} lá"><div class="card back small">${BACK}</div><b class="count">${p.deck.length}</b></div>
+        <div class="pile disc" title="Bãi bài: ${p.discard.length} lá"><div class="slot small">♻</div><b class="count">${p.discard.length}</b></div>`;
+    },
+
+    renderTurnStats() {
+      const d = this.duel;
+      const me = d.players[0];
+      $('#turn-stats').innerHTML = `
+        <div class="ts-head">Lượt ${d.turn}</div>
+        <div class="ts-row" title="Câu đúng của bạn"><span>✔</span><b>${me.stats.ok}</b></div>
+        <div class="ts-row" title="Bắt lỗi thành công"><span>⚠</span><b>${me.stats.challengeWins}</b></div>
+        <div class="ts-row" title="Số lá trên tay"><span>🂠</span><b>${me.hand.length}</b></div>`;
     },
 
     renderHand(me) {
@@ -255,7 +274,9 @@
       const editable = this.canAct();
       zone.classList.toggle('selecting', !!this.selectMode);
       if (!d.sentence.length) {
-        zone.innerHTML = `<div class="empty-hint">${d.current === 0 ? 'Chạm vào thẻ trên tay hoặc thẻ cố định để ghép câu' : 'Đối thủ đang suy nghĩ…'}</div>`;
+        const lanes = [['S', 'Subject'], ['AUX', 'Auxiliary'], ['V', 'Verb'], ['N', 'Noun'], ['A', 'Adj / Adv'], ['T', 'Time']];
+        zone.innerHTML = `<div class="lanes">${lanes.map(([k, n]) => `<div class="lane t-${k}"><b>${k}</b><small>${n}</small></div>`).join('')}</div>
+          <div class="empty-hint">${d.current === 0 ? 'Chạm vào thẻ trên tay hoặc thẻ cố định để ghép câu — thứ tự lane chỉ là gợi ý' : 'Đối thủ đang suy nghĩ…'}</div>`;
       }
       d.sentence.forEach((it, i) => {
         const wrap = document.createElement('div');
@@ -321,6 +342,7 @@
       $('#btn-end').disabled = !can;
       $('#btn-say').disabled = !d.sentence.length;
       document.body.classList.toggle('my-turn', can);
+      $('#btn-end').classList.toggle('ready', can);
     },
 
     // ---------- Tương tác ----------
@@ -518,6 +540,12 @@
     async showJudgement(res, points, items) {
       this._mark = res.errors.flatMap((e) => e.at);
       this.renderSentence();
+      if (res.ok) {
+        const z = $('#sentence-zone');
+        z.classList.add('success');
+        await wait(650);
+        z.classList.remove('success');
+      }
       const html = res.ok
         ? `<div class="verdict ok">✔ CHÍNH XÁC! <b>+${points}</b> điểm</div><div class="big-sentence">${esc(res.text)} <button class="say" data-say="${esc(res.text)}">🔊</button></div>`
         : `<div class="verdict bad">✘ CHƯA ĐÚNG</div><div class="big-sentence bad">${esc(res.text)}</div>${this.errorList(res, items)}<p class="muted">Thẻ được trả lại tay. Lượt sau thử lại nhé!</p>`;

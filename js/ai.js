@@ -88,7 +88,8 @@
 
   function score(c) {
     const hand = c.parts.filter((p) => p.src === 'hand').length;
-    return c.parts.length + hand * 2.5 + (c.linker ? 3 : 0) + Math.random();
+    const question = c.parts[0].card.type === 'AUX';
+    return c.parts.length + hand * 2.5 + (c.linker ? 3 : 0) - (question ? 2.5 : 0) + Math.random() * 2;
   }
 
   /** Tìm câu tốt nhất cho người chơi `pl` của trận `duel` */
