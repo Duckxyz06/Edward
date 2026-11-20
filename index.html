@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>EdWords – Sentence Battle</title>
+  <meta name="description" content="Trò chơi thẻ bài đối kháng luyện từ vựng và ngữ pháp tiếng Anh cho sinh viên không chuyên – Trường Đại học Đồng Tháp." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;800&family=Cinzel:wght@700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div id="app">
+
+  <!-- ============ MÀN HÌNH CHÍNH ============ -->
+  <section id="screen-title" class="screen active">
+    <div class="title-bg"></div>
+    <div class="title-wrap">
+      <div class="logo">
+        <div class="logo-main">EdWords</div>
+        <div class="logo-sub">SENTENCE BATTLE</div>
+      </div>
+      <p class="tagline">Đấu thẻ bài · Ghép câu tiếng Anh · Giành chiến thắng</p>
+      <nav class="menu">
+        <button class="btn-menu primary" data-go="setup">⚔️ Đấu với máy</button>
+        <button class="btn-menu" data-go="rules">📜 Luật chơi</button>
+        <button class="btn-menu" data-go="library">🗂️ Thư viện thẻ</button>
+        <button class="btn-menu" data-go="history">📊 Lịch sử &amp; phiếu theo dõi</button>
+      </nav>
+      <p class="credit">Mô hình trò chơi của nhóm sinh viên nghiên cứu · Khoa Ngoại ngữ · Trường Đại học Đồng Tháp</p>
+    </div>
+  </section>
+
+  <!-- ============ THIẾT LẬP TRẬN ============ -->
+  <section id="screen-setup" class="screen">
+    <div class="panel-page">
+      <header class="page-head"><button class="back" data-go="title">←</button><h2>Thiết lập trận đấu</h2></header>
+      <form id="setup-form" class="setup-grid">
+        <label class="field"><span>Tên người chơi</span><input name="playerName" maxlength="20" value="Bạn" /></label>
+        <label class="field"><span>Chủ đề từ vựng</span>
+          <select name="topic" id="topic-select"></select>
+        </label>
+        <fieldset class="field wide">
+          <legend>Cấu trúc ngữ pháp (giảng viên chọn)</legend>
+          <div id="focus-list" class="chips"></div>
+        </fieldset>
+        <label class="field"><span>Độ khó của máy</span>
+          <select name="difficulty">
+            <option value="easy">Dễ – máy hay mắc lỗi (luyện bắt lỗi)</option>
+            <option value="normal" selected>Vừa</option>
+            <option value="hard">Khó</option>
+          </select>
+        </label>
+        <label class="field"><span>Điểm để thắng</span>
+          <select name="target"><option>3</option><option selected>5</option><option>7</option></select>
+        </label>
+        <label class="field"><span>Thời gian mỗi lượt</span>
+          <select name="turnTime"><option value="0">Không giới hạn</option><option value="60">60 giây</option><option value="120" selected>120 giây</option><option value="180">180 giây</option></select>
+        </label>
+        <label class="field"><span>Thời gian trận (buổi 45–60 phút)</span>
+          <select name="matchTime"><option value="0" selected>Không giới hạn</option><option value="600">10 phút</option><option value="900">15 phút</option><option value="1200">20 phút</option></select>
+        </label>
+        <label class="check"><input type="checkbox" name="assist" /> <span>Chế độ luyện tập: hiện gợi ý ngữ pháp khi đang ghép câu</span></label>
+        <label class="check"><input type="checkbox" name="speaking" /> <span>Luyện nói: đọc to câu vào micro trước khi chấm <small id="mic-note"></small></span></label>
+        <div class="wide actions-row"><button type="submit" class="btn big primary">Bắt đầu ⚔️</button></div>
+      </form>
+    </div>
+  </section>
+
+  <!-- ============ LUẬT CHƠI ============ -->
+  <section id="screen-rules" class="screen">
+    <div class="panel-page">
+      <header class="page-head"><button class="back" data-go="title">←</button><h2>Luật chơi</h2></header>
+      <div class="rules">
+        <div class="rule-card">
+          <h3>🎯 Mục tiêu</h3>
+          <p>Ghép thẻ thành <b>câu tiếng Anh đúng ngữ pháp</b>. Mỗi câu đúng được <b>1 điểm</b>. Ai đạt <b>5 điểm</b> trước sẽ thắng. Nếu trận có giới hạn thời gian, người nhiều điểm hơn khi hết giờ sẽ thắng.</p>
+        </div>
+        <div class="rule-card">
+          <h3>🃏 Bộ thẻ</h3>
+          <ul class="type-legend" id="type-legend"></ul>
+        </div>
+        <div class="rule-card">
+          <h3>🧭 Sân đấu</h3>
+          <p>Mỗi người có <b>5 lá trên tay</b> và <b>6 thẻ cố định</b> (2 S, 1 T, 2 AUX, 1 L). Quản trò công bố các thẻ này trước trận. Thẻ cố định được dùng lại mỗi lượt, mỗi thẻ chỉ một lần trong một câu.</p>
+        </div>
+        <div class="rule-card">
+          <h3>⏱️ Các phase trong lượt</h3>
+          <ol>
+            <li><b>Draw:</b> rút 1 lá (người đi trước không rút ở lượt đầu).</li>
+            <li><b>Main:</b> dùng thẻ hành động, úp Lá chắn, dùng Addword, rồi ghép câu từ bài trên tay và thẻ cố định. Câu phải dùng ít nhất 1 lá trên tay. Với thẻ V, chọn dạng động từ đúng: V, V-s/es, V2, V-ing, V3.</li>
+            <li><b>Check:</b> quản trò (máy) chấm câu và đọc to câu. Câu đúng thì các lá trên tay đã dùng vào bãi bài. Câu sai thì thẻ được trả lại tay.</li>
+            <li><b>End:</b> trên tay giữ tối đa 8 lá.</li>
+          </ol>
+        </div>
+        <div class="rule-card">
+          <h3>⚠️ Thách đấu – sửa lỗi cho nhau</h3>
+          <p>Khi đối thủ đặt câu, bạn được <b>Chấp nhận</b> hoặc <b>Thách đấu</b> rồi chỉ vào thẻ bạn cho là sai.</p>
+          <ul>
+            <li>Câu sai, bạn chỉ đúng chỗ sai: rút <b>2 lá</b>.</li>
+            <li>Câu sai, bạn chỉ sai chỗ: rút <b>1 lá</b>.</li>
+            <li>Câu thực ra đúng: bạn mất 1 lá ngẫu nhiên.</li>
+            <li>Nếu không ai phát hiện lỗi, đối thủ <b>vẫn được điểm</b>. Hãy chú ý!</li>
+          </ul>
+        </div>
+        <div class="rule-card">
+          <h3>★ Thẻ hỗ trợ</h3>
+          <ul id="action-legend"></ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ THƯ VIỆN THẺ ============ -->
+  <section id="screen-library" class="screen">
+    <div class="panel-page">
+      <header class="page-head"><button class="back" data-go="title">←</button><h2>Thư viện thẻ</h2></header>
+      <div class="lib-filters">
+        <select id="lib-topic"></select>
+        <div id="lib-types" class="chips"></div>
+        <input id="lib-search" placeholder="Tìm từ hoặc nghĩa…" />
+      </div>
+      <div id="lib-grid" class="lib-grid"></div>
+    </div>
+  </section>
+
+  <!-- ============ LỊCH SỬ ============ -->
+  <section id="screen-history" class="screen">
+    <div class="panel-page">
+      <header class="page-head"><button class="back" data-go="title">←</button><h2>Lịch sử trận &amp; phiếu theo dõi</h2></header>
+      <p class="muted">Dữ liệu chỉ lưu trên trình duyệt này. Tải CSV để tổng hợp phiếu theo dõi các buổi thử nghiệm.</p>
+      <div class="actions-row"><button class="btn" id="hist-export">⬇️ Tải toàn bộ (CSV)</button><button class="btn danger" id="hist-clear">Xóa lịch sử</button></div>
+      <div id="hist-list"></div>
+    </div>
+  </section>
+
+  <!-- ============ SÂN ĐẤU ============ -->
+  <section id="screen-duel" class="screen">
+    <aside id="detail" class="detail"></aside>
+
+    <main id="field">
+      <div class="side opp">
+        <div class="hand opp-hand" id="opp-hand"></div>
+        <div class="row">
+          <div class="pinfo" id="opp-info"></div>
+          <div class="zone-wrap"><div class="zone-label">Thẻ cố định</div><div class="zone fixed" id="opp-fixed"></div></div>
+          <div class="zone-wrap"><div class="zone-label">Úp</div><div class="zone setz" id="opp-set"></div></div>
+          <div class="piles" id="opp-piles"></div>
+        </div>
+      </div>
+
+      <div id="board">
+        <div id="phase-bar"></div>
+        <div id="sentence-zone" class="sentence-zone"></div>
+        <div id="sentence-preview" class="preview"></div>
+        <div id="assist" class="assist"></div>
+        <div id="board-actions" class="board-actions">
+          <button class="btn" id="btn-say" title="Nghe câu">🔊 Đọc</button>
+          <button class="btn" id="btn-clear">↺ Xóa câu</button>
+          <button class="btn primary" id="btn-submit">✔ Xác nhận câu</button>
+          <button class="btn ghost" id="btn-end">⏭ Kết thúc lượt</button>
+        </div>
+      </div>
+
+      <div class="side me">
+        <div class="row">
+          <div class="pinfo" id="my-info"></div>
+          <div class="zone-wrap"><div class="zone-label">Thẻ cố định</div><div class="zone fixed" id="my-fixed"></div></div>
+          <div class="zone-wrap"><div class="zone-label">Úp</div><div class="zone setz" id="my-set"></div></div>
+          <div class="piles" id="my-piles"></div>
+        </div>
+        <div class="hand my-hand" id="my-hand"></div>
+      </div>
+    </main>
+
+    <aside id="sidebar">
+      <div class="side-top">
+        <div id="match-timer" class="match-timer"></div>
+        <div class="side-tools">
+          <button class="icon-btn" id="btn-mute" title="Bật/tắt âm thanh">🔈</button>
+          <button class="icon-btn" id="btn-help" title="Luật chơi">❔</button>
+          <button class="icon-btn" id="btn-quit" title="Rời trận">🏳️</button>
+        </div>
+      </div>
+      <div id="prompt-panel" class="prompt-panel"></div>
+      <div class="log-title">Nhật ký trận đấu</div>
+      <div id="log" class="log"></div>
+    </aside>
+
+    <div id="banner" class="banner"></div>
+    <div id="fx" class="fx"></div>
+  </section>
+
+  <!-- ============ KẾT QUẢ ============ -->
+  <section id="screen-result" class="screen">
+    <div class="panel-page" id="result-body"></div>
+  </section>
+
+  <div id="modal-root"></div>
+  <div id="toast" class="toast"></div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/grammar.js"></script>
+<script src="js/speech.js"></script>
+<script src="js/ai.js"></script>
+<script src="js/game.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
