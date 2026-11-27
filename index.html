@@ -84,6 +84,88 @@
     </div>
   </section>
 
+  <!-- ============ THIẾT LẬP ĐẤU MÀU ============ -->
+  <section id="screen-setup-color" class="screen">
+    <div class="panel-page">
+      <header class="page-head"><button class="back" data-go="title">←</button><h2>Đấu màu · thiết lập</h2></header>
+      <form id="color-form" class="setup-grid">
+        <label class="field"><span>Tên người chơi</span><input name="playerName" maxlength="20" value="Bạn" /></label>
+        <label class="field"><span>Số người chơi (bạn + máy)</span>
+          <select name="players"><option value="2">2 người</option><option value="3">3 người</option><option value="4" selected>4 người</option><option value="5">5 người</option><option value="6">6 người</option></select>
+        </label>
+        <label class="field"><span>Câu hỏi khi đánh lá từ vựng</span>
+          <select name="quiz">
+            <option value="mix" selected>Trộn: nghĩa tiếng Việt + dạng số nhiều</option>
+            <option value="meaning">Chọn nghĩa tiếng Việt</option>
+            <option value="plural">Chọn dạng số nhiều</option>
+            <option value="listen">Nghe phát âm, chọn từ đúng</option>
+            <option value="off">Không hỏi (chơi tự do)</option>
+          </select>
+        </label>
+        <label class="field"><span>Số lá ban đầu</span>
+          <select name="handSize"><option value="5">5 lá</option><option value="7" selected>7 lá</option></select>
+        </label>
+        <label class="field"><span>Độ khó của máy</span>
+          <select name="difficulty"><option value="easy">Dễ – máy hay trả lời sai</option><option value="normal" selected>Vừa</option><option value="hard">Khó</option></select>
+        </label>
+        <label class="field"><span>Tốc độ lượt của máy</span>
+          <select name="aiSpeed"><option value="normal" selected>Chuẩn</option><option value="fast">Nhanh</option></select>
+        </label>
+        <div class="field wide color-intro">
+          <span>Bộ bài 115 lá · 4 màu chủ đề</span>
+          <div class="color-themes">
+            <div class="ctheme red">❤️ Gia đình &amp; quần áo</div><div class="ctheme blue">💙 Đồ dùng học tập &amp; nhà cửa</div>
+            <div class="ctheme green">💚 Động vật, thiên nhiên &amp; đồ chơi</div><div class="ctheme yellow">💛 Đồ ăn &amp; phương tiện</div>
+          </div>
+        </div>
+        <div class="wide actions-row"><button type="submit" class="btn big primary">Bắt đầu 🎨</button></div>
+      </form>
+    </div>
+  </section>
+
+  <!-- ============ BÀN CHƠI ĐẤU MÀU ============ -->
+  <section id="screen-color" class="screen">
+    <header class="hud">
+      <div class="hud-left">
+        <img class="hud-logo" src="assets/logo.png" alt="EdWords" />
+        <div class="hud-plaque"><span class="hud-ico">🎨</span><b>Đấu màu</b><span class="hud-sep"></span><span id="c-mode">Từ vựng theo màu</span></div>
+      </div>
+      <div class="hud-right">
+        <button class="orb-btn" id="c-help" title="Luật chơi">?</button>
+        <button class="orb-btn" data-music-toggle title="Tắt nhạc nền">🎵</button>
+        <button class="orb-btn" id="c-quit" title="Rời trận về màn hình chính">⌂</button>
+      </div>
+    </header>
+    <main class="c-field">
+      <div class="arena-floor"></div>
+      <div id="c-seats" class="seats"></div>
+      <div class="c-center">
+        <div class="c-pile">
+          <button id="c-deck" class="c-deck" title="Rút 1 lá"><img src="assets/cards/color/117.webp" alt="Bộ bài" /><b id="c-deck-n"></b><span>Rút bài</span></button>
+        </div>
+        <div class="c-pile">
+          <div id="c-top" class="c-top"></div>
+          <div id="c-color" class="c-color"></div>
+        </div>
+        <div class="c-side-info">
+          <div id="c-dir" class="c-dir">↻</div>
+          <div id="c-status" class="c-status"></div>
+          <button class="btn" id="c-pass" disabled>⏭ Bỏ lượt</button>
+        </div>
+      </div>
+      <div class="side me">
+        <div class="row"><div class="pinfo" id="c-me"></div></div>
+        <div class="hand my-hand c-hand" id="c-hand"></div>
+      </div>
+    </main>
+    <aside class="gold-panel c-sidebar">
+      <div class="order-title">Thứ tự lượt</div>
+      <div id="c-order" class="turn-order"></div>
+      <div class="log-title">Nhật ký</div>
+      <div id="c-log" class="log"></div>
+    </aside>
+  </section>
+
   <!-- ============ LUẬT CHƠI ============ -->
   <section id="screen-rules" class="screen">
     <div class="panel-page">
@@ -237,5 +319,6 @@
 <script src="js/game.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/main.js"></script>
+<script src="js/color.js"></script>
 </body>
 </html>
