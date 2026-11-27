@@ -17,6 +17,7 @@
     OBJECT: 'Tân ngữ / bổ ngữ',
     ADJ_ADV: 'Tính từ / trạng từ',
     MEANING: 'Nghĩa / kết hợp từ',
+    RULE: 'Luật của quản trò',
   };
 
   const TENSE_VI = {
@@ -179,7 +180,7 @@
           adjComp.forEach((ad) => {
             if (!intersects(ad.card.tags, sTags)) E('MEANING', [ad, subj.head], `${q(ad.card.word)} không dùng để miêu tả ${q(subj.head.card.word)}.`);
           });
-          if (obj && !intersects(npTags(obj), sTags)) E('MEANING', [obj.head, subj.head], `${q(subj.head.card.word)} không thể “là” ${q(npText(obj))}.`);
+          if (obj && (!npTags(obj).includes('person') || !intersects(npTags(obj), sTags))) E('MEANING', [obj.head, subj.head], `${q(subj.head.card.word)} không thể “là” ${q(npText(obj))}. Sau to be nên dùng tính từ.`);
           else if (obj) {
             const objPl = npPerson(obj) === '3p';
             const subjPl = ['1p', '3p'].includes(person);
@@ -278,9 +279,70 @@
     }[tag] || '';
   }
 
+  // ---- Dạng từ của thẻ N (mạo từ / số nhiều) và thẻ A (tính từ / trạng từ) ----
+  function nForms(card) {
+    const h = card.head, p = card.plural;
+    switch (card.count) {
+      case 'c': return [
+        { key: 'a', det: 'a', head: h, number: '3s', label: 'a/an + N' },
+        { key: 'the', det: 'the', head: h, number: '3s', label: 'the + N' },
+        { key: 'pl', det: '', head: p, number: '3p', label: 'N số nhiều' },
+        { key: 'thepl', det: 'the', head: p, number: '3p', label: 'the + N số nhiều' },
+      ];
+      case 'sp': return [
+        { key: 'a', det: 'a', head: h, number: '3s', label: 'a/an + N (số ít)' },
+        { key: 'pl', det: '', head: p, number: '3p', label: 'N (số nhiều)' },
+        { key: 'thepl', det: 'the', head: p, number: '3p', label: 'the + N (số nhiều)' },
+      ];
+      case 'pl': return [
+        { key: 'bare', det: '', head: h, number: '3p', label: 'N (luôn số nhiều)' },
+        { key: 'the', det: 'the', head: h, number: '3p', label: 'the + N' },
+      ];
+      case 'u': return [
+        { key: 'bare', det: '', head: h, number: '3s', label: 'N (không đếm được)' },
+        { key: 'the', det: 'the', head: h, number: '3s', label: 'the + N' },
+      ];
+      default: return null;
+    }
+  }
+  /** Các lựa chọn dạng từ cho một thẻ: [{key, text, label}] (null nếu thẻ không có dạng) */
+  function formOptions(card) {
+    if (card.type === 'V') {
+      const seen = new Set();
+      return FORM_KEYS.filter((k) => (seen.has(card.forms[k]) ? false : seen.add(card.forms[k])))
+        .map((k) => ({ key: k, text: card.forms[k], label: FORM_LABEL[k] }));
+    }
+    if (card.type === 'N' && card.count) return nForms(card).map((f) => ({ key: f.key, text: npWord(f.det, f.head), label: f.label }));
+    if (card.type === 'A' && card.aforms) return [
+      { key: 'adj', text: card.aforms.adj, label: 'Tính từ' },
+      { key: 'adv', text: card.aforms.adv, label: 'Trạng từ' },
+    ];
+    return null;
+  }
+  function defaultForm(card) { const o = formOptions(card); return o ? o[0].key : 'base'; }
+  function npWord(det, head) { if (det === 'a' || det === 'an') det = article(head); return (det ? det + ' ' : '') + head; }
+  /** Thẻ "hiệu lực" sau khi áp dạng từ người chơi chọn */
+  function resolve(card, form) {
+    if (card.type === 'N' && card.count) {
+      const fs = nForms(card);
+      const f = fs.find((x) => x.key === form) || fs[0];
+      return { ...card, det: f.det, head: f.head, number: f.number, word: npWord(f.det, f.head) };
+    }
+    if (card.type === 'A' && card.aforms) {
+      const k = form === 'adv' ? 'adv' : 'adj';
+      return { ...card, kind: k, word: card.aforms[k] };
+    }
+    return card;
+  }
+  /** Chữ hiển thị của thẻ theo dạng đã chọn */
+  function displayWord(card, form) {
+    if (card.type === 'V') return card.forms[form && card.forms[form] ? form : 'base'];
+    return resolve(card, form).word;
+  }
+
   /** items: [{card, form}] → {ok, errors[], text, question, tenses[]} */
-  function validate(items) {
-    const toks = items.map((it, gi) => ({ type: it.card.type, card: it.card, form: it.form, gi }));
+  function validate(items, opts = {}) {
+    const toks = items.map((it, gi) => ({ type: it.card.type, card: resolve(it.card, it.form), form: it.form, gi }));
     const errors = [];
     const tenses = [];
     if (toks.length < 3) errors.push({ code: 'STRUCTURE', at: [], vi: 'Câu cần ít nhất 3 thẻ.' });
@@ -305,6 +367,13 @@
         if (r.tense) tenses.push(r.tense);
       });
     }
+    // Luật đặt câu của quản trò (vd: "Đặt câu với thì hiện tại đơn")
+    const ruleKey = opts.rule !== undefined ? opts.rule : Grammar.rule;
+    const rule = ruleKey && EW.DATA && EW.DATA.RULES[ruleKey];
+    if (rule && rule.tenses && tenses.length && !errors.some((e) => e.code === 'TENSE' || e.code === 'VERB_FORM' || e.code === 'AGREEMENT')) {
+      const bad = tenses.filter((t) => !rule.tenses.includes(t));
+      if (bad.length) errors.push({ code: 'RULE', at: [], vi: `Câu đang dùng ${TENSE_VI[bad[0]]}, chưa đúng luật quản trò: “${rule.name}”.` });
+    }
     return { ok: errors.length === 0, errors, text: render(items), question, tenses, hasLinker: links.length > 0 };
   }
 
@@ -314,7 +383,7 @@
 
   function render(items) {
     if (!items.length) return '';
-    const toks = items.map((it) => ({ type: it.card.type, card: it.card, form: it.form }));
+    const toks = items.map((it) => ({ type: it.card.type, card: resolve(it.card, it.form), form: it.form }));
     const words = [];
     let buf = [];
     const flush = () => { words.push(...buf.map((t) => t.card.word)); buf = []; };
@@ -332,6 +401,8 @@
       }
       flush();
       let w = tokWord(t);
+      const nx = toks[i + 1];
+      if (t.type === 'V' && t.card.prep && nx && (nx.type === 'N' || (nx.type === 'A' && nx.card.kind === 'adj'))) w += ' ' + t.card.prep;
       if (t.type === 'L' && (w === 'but' || w === 'so') && words.length) words[words.length - 1] += ',';
       words.push(w);
       const prev = toks[i - 1];
@@ -344,20 +415,23 @@
     return s + (question ? '?' : '.');
   }
 
-  /** Thử sửa dạng động từ để câu đúng → trả về câu gợi ý hoặc null */
-  function suggestFix(items) {
-    const vIdx = items.map((it, i) => (it.card.type === 'V' ? i : -1)).filter((i) => i >= 0);
-    if (!vIdx.length || vIdx.length > 3) return null;
-    const total = Math.pow(5, vIdx.length);
+  /** Thử đổi dạng từ (V, N, A) để câu đúng → trả về câu gợi ý hoặc null */
+  function suggestFix(items, opts = {}) {
+    const idx = items.map((it, i) => (formOptions(it.card) ? i : -1)).filter((i) => i >= 0);
+    if (!idx.length || idx.length > 5) return null;
+    const opt = idx.map((i) => formOptions(items[i].card).map((o) => o.key));
+    const total = opt.reduce((a, o) => a * o.length, 1);
+    if (total > 3000) return null;
     for (let n = 0; n < total; n++) {
       let m = n;
       const trial = items.map((it) => ({ card: it.card, form: it.form }));
-      vIdx.forEach((vi) => { trial[vi].form = FORM_KEYS[m % 5]; m = Math.floor(m / 5); });
-      const r = validate(trial);
+      idx.forEach((ti, k) => { trial[ti].form = opt[k][m % opt[k].length]; m = Math.floor(m / opt[k].length); });
+      const r = validate(trial, opts);
       if (r.ok) return r.text;
     }
     return null;
   }
 
-  EW.Grammar = { validate, render, suggestFix, ERROR_CATS, FORM_LABEL, FORM_KEYS, TENSE_VI, TTAG_VI };
+  const Grammar = { validate, render, suggestFix, resolve, formOptions, defaultForm, displayWord, rule: null, ERROR_CATS, FORM_LABEL, FORM_KEYS, TENSE_VI, TTAG_VI };
+  EW.Grammar = Grammar;
 })();

@@ -98,182 +98,150 @@
   const L = (word, vi) => ({ id: id('L'), type: 'L', word, vi });
   const linkers = [L('and', 'và'), L('but', 'nhưng'), L('so', 'vì vậy'), L('because', 'bởi vì'), L('when', 'khi')];
 
-  // ---------- V / N / A theo chủ đề ----------
-  // obj: none | opt | req | adj ; objTags: loại danh từ phù hợp làm tân ngữ
+  // ---------- V / N / A theo chủ đề (bộ thẻ in của nhóm: Duckxyz06/Board-game) ----------
+  // V: obj none | opt | req | adj ; objTags: loại danh từ làm tân ngữ ; prep: giới từ tự thêm trước tân ngữ
+  //    agent: false nếu chủ ngữ không cần là người (vd: The storm destroyed the road).
   const V = (base, s, past, ing, pp, vi, obj, objTags, extra = {}) => ({
     id: id('V'), type: 'V', word: base, forms: { base, s, past, ing, pp }, vi, obj, objTags, ...extra,
   });
-  // det: '' | 'a' | 'the' | 'my' ... ; number: 3s | 3p
-  const N = (det, head, number, tags, vi) => ({
-    id: id('N'), type: 'N', det, head, number, tags, vi, word: (det ? det + ' ' : '') + head,
+  // N: count c (đếm được) | u (không đếm được) | pl (luôn số nhiều) | sp (số ít = số nhiều, vd species)
+  //    Người chơi chọn dạng: a/an + N · the + N · N-s · the + N-s (tùy loại).
+  const N = (head, plural, count, tags, vi, extra = {}) => ({
+    id: id('N'), type: 'N', head, plural, count, tags, vi, word: head, ...extra,
   });
-  // kind: adj | adv | place ; tags: (tính từ) loại danh từ/chủ ngữ phù hợp
-  const A = (word, kind, vi, tags) => ({ id: id('A'), type: 'A', word, kind, vi, tags });
+  // A: thẻ tính từ có dạng trạng từ đi kèm (in trên thẻ) → người chơi chọn tính từ hoặc trạng từ
+  const A = (adj, adv, vi, tags, extra = {}) => ({
+    id: id('A'), type: 'A', word: adj, aforms: { adj, adv }, vi, tags, kind: 'adj', ...extra,
+  });
+
+  const C = (topic) => (n) => `assets/cards/${topic}/${n}.webp`;
+  const cs = C('shopping'), cd = C('disasters'), ce = C('environment');
 
   const topics = {
-    daily: {
-      name: 'Đời sống hằng ngày',
-      en: 'Daily Life',
-      icon: '🏠',
-      verbs: [
-        V('eat', 'eats', 'ate', 'eating', 'eaten', 'ăn', 'opt', ['food']),
-        V('drink', 'drinks', 'drank', 'drinking', 'drunk', 'uống', 'opt', ['drink']),
-        V('cook', 'cooks', 'cooked', 'cooking', 'cooked', 'nấu', 'opt', ['food']),
-        V('buy', 'buys', 'bought', 'buying', 'bought', 'mua', 'req', ['food', 'drink', 'thing']),
-        V('clean', 'cleans', 'cleaned', 'cleaning', 'cleaned', 'dọn dẹp', 'opt', ['home', 'thing']),
-        V('watch', 'watches', 'watched', 'watching', 'watched', 'xem', 'opt', ['media', 'sport']),
-        V('listen to', 'listens to', 'listened to', 'listening to', 'listened to', 'nghe', 'req', ['music', 'media', 'person'], { noPassive: true }),
-        V('go to', 'goes to', 'went to', 'going to', 'gone to', 'đi đến', 'req', ['place', 'home'], { noPassive: true }),
-        V('help', 'helps', 'helped', 'helping', 'helped', 'giúp đỡ', 'opt', ['person']),
-        V('wake up', 'wakes up', 'woke up', 'waking up', 'woken up', 'thức dậy', 'none', null, { noPassive: true }),
-        V('sleep', 'sleeps', 'slept', 'sleeping', 'slept', 'ngủ', 'none', null),
-        V('feel', 'feels', 'felt', 'feeling', 'felt', 'cảm thấy', 'adj', null, { noPassive: true }),
-      ],
+    shopping: {
+      name: 'Mua sắm', en: 'Unit 8 · Shopping', icon: '🛍️', back: cs(57),
       nouns: [
-        N('', 'rice', '3s', ['food'], 'cơm'),
-        N('', 'bread', '3s', ['food'], 'bánh mì'),
-        N('', 'breakfast', '3s', ['food'], 'bữa sáng'),
-        N('', 'coffee', '3s', ['drink'], 'cà phê'),
-        N('', 'milk tea', '3s', ['drink'], 'trà sữa'),
-        N('', 'music', '3s', ['music'], 'âm nhạc'),
-        N('the', 'news', '3s', ['media'], 'bản tin'),
-        N('a', 'movie', '3s', ['media'], 'một bộ phim'),
-        N('my', 'room', '3s', ['home', 'place'], 'phòng của tôi'),
-        N('the', 'kitchen', '3s', ['home', 'place'], 'nhà bếp'),
-        N('the', 'market', '3s', ['place'], 'chợ'),
-        N('a', 'phone', '3s', ['thing'], 'một chiếc điện thoại'),
-        N('my', 'parents', '3p', ['person'], 'bố mẹ tôi'),
-        N('my', 'brother', '3s', ['person'], 'anh/em trai tôi'),
+        N('supermarket', 'supermarkets', 'c', ['shop'], 'siêu thị', { img: cs(1), copies: 2, def: 'A large shop that sells food and other things.' }),
+        N('open-air market', 'open-air markets', 'c', ['shop'], 'chợ ngoài trời', { img: cs(3), copies: 2, def: 'A market outside, not inside a building.' }),
+        N('online shop', 'online shops', 'c', ['shop'], 'cửa hàng trực tuyến', { img: cs(5), copies: 2, def: 'A shop that sells things on the Internet.' }),
+        N('clothes', 'clothes', 'pl', ['goods'], 'quần áo', { img: cs(7), copies: 2, def: 'Things people wear on their bodies.' }),
+        N('shoes', 'shoes', 'pl', ['goods'], 'giày', { img: cs(9), copies: 2, def: 'Things people wear on their feet.' }),
+        N('sale', 'sales', 'c', ['event'], 'đợt giảm giá', { img: cs(11), copies: 2, def: 'A time when things cost less money.' }),
+        N('website', 'websites', 'c', ['shop', 'web'], 'trang web', { img: cs(13), copies: 2, def: 'A place on the Internet with information.' }),
+        N('money', 'money', 'u', ['money'], 'tiền', { img: cs(15), copies: 2, def: 'What people use to buy things.' }),
+      ],
+      verbs: [
+        V('buy', 'buys', 'bought', 'buying', 'bought', 'mua', 'req', ['goods'], { img: cs(17), copies: 2, def: 'To get something by paying money.' }),
+        V('sell', 'sells', 'sold', 'selling', 'sold', 'bán', 'req', ['goods'], { img: cs(19), copies: 2, def: 'To give something to someone for money.' }),
+        V('pay', 'pays', 'paid', 'paying', 'paid', 'trả tiền', 'opt', ['money'], { img: cs(21), copies: 2, def: 'To give money for something.' }),
+        V('go', 'goes', 'went', 'going', 'gone', 'đi', 'opt', ['shop'], { img: cs(23), copies: 2, prep: 'to', noPassive: true, def: 'To travel or move to another place.' }),
+        V('spend', 'spends', 'spent', 'spending', 'spent', 'tiêu (tiền)', 'req', ['money'], { img: cs(25), copies: 2, def: 'To use money to buy things.' }),
+        V('visit', 'visits', 'visited', 'visiting', 'visited', 'ghé thăm', 'req', ['shop'], { img: cs(27), copies: 2, def: 'To go to a place.' }),
+        V('choose', 'chooses', 'chose', 'choosing', 'chosen', 'chọn', 'req', ['goods', 'shop'], { img: cs(29), copies: 2, def: 'To pick the thing you want.' }),
+        V('offer', 'offers', 'offered', 'offering', 'offered', 'đưa ra, mời', 'req', ['goods', 'event', 'money'], { img: cs(31), copies: 1, def: 'To say that someone can have something.' }),
+        V('save', 'saves', 'saved', 'saving', 'saved', 'tiết kiệm', 'opt', ['money'], { img: cs(32), copies: 1, def: 'To keep money for later.' }),
+        V('bargain', 'bargains', 'bargained', 'bargaining', 'bargained', 'mặc cả', 'none', null, { img: cs(33), copies: 1, noPassive: true, def: 'To try to agree on a lower price.' }),
       ],
       adjs: [
-        A('happy', 'adj', 'vui vẻ', ['person']),
-        A('tired', 'adj', 'mệt', ['person']),
-        A('busy', 'adj', 'bận rộn', ['person', 'place']),
-        A('hungry', 'adj', 'đói', ['person']),
-        A('delicious', 'adj', 'ngon', ['food', 'drink']),
-        A('new', 'adj', 'mới', ['thing', 'home', 'media', 'place']),
-        A('quickly', 'adv', 'một cách nhanh chóng'),
-        A('carefully', 'adv', 'một cách cẩn thận'),
-        A('slowly', 'adv', 'một cách chậm rãi'),
-        A('at home', 'place', 'ở nhà'),
-        A('in the kitchen', 'place', 'trong bếp'),
+        A('cheap', 'cheaply', 'rẻ', ['goods', 'shop', 'event'], { img: cs(34), copies: 2, def: 'Not costing much money.' }),
+        A('expensive', 'expensively', 'đắt', ['goods', 'shop'], { img: cs(36), copies: 2, def: 'Costing a lot of money.' }),
+        A('convenient', 'conveniently', 'tiện lợi', ['shop', 'goods', 'web'], { img: cs(38), copies: 2, def: 'Easy and useful to use.' }),
+        A('popular', 'popularly', 'phổ biến, được ưa chuộng', ['shop', 'goods', 'web', 'event', 'person'], { img: cs(40), copies: 2, def: 'Liked by many people.' }),
+        A('good', 'well', 'tốt', ['shop', 'goods', 'web', 'event', 'person'], { img: cs(42), copies: 2, def: 'Of a high quality.' }),
+        A('nice', 'nicely', 'đẹp, dễ chịu', ['shop', 'goods', 'web', 'event', 'person'], { img: cs(44), copies: 2, def: 'Pleasant or enjoyable.' }),
       ],
+      actions: { draw2: cs(46), draw4: cs(48), exchange: cs(50), steal: cs(52), addword: cs(54) },
     },
-    school: {
-      name: 'Học tập ở trường',
-      en: 'School & Study',
-      icon: '🎓',
-      verbs: [
-        V('study', 'studies', 'studied', 'studying', 'studied', 'học', 'opt', ['subject', 'language']),
-        V('learn', 'learns', 'learned', 'learning', 'learned', 'học, tiếp thu', 'opt', ['subject', 'language', 'word']),
-        V('read', 'reads', 'read', 'reading', 'read', 'đọc', 'opt', ['text']),
-        V('write', 'writes', 'wrote', 'writing', 'written', 'viết', 'opt', ['text']),
-        V('speak', 'speaks', 'spoke', 'speaking', 'spoken', 'nói', 'opt', ['language']),
-        V('do', 'does', 'did', 'doing', 'done', 'làm', 'req', ['task']),
-        V('finish', 'finishes', 'finished', 'finishing', 'finished', 'hoàn thành', 'req', ['task', 'text']),
-        V('pass', 'passes', 'passed', 'passing', 'passed', 'vượt qua (kỳ thi)', 'req', ['exam']),
-        V('ask', 'asks', 'asked', 'asking', 'asked', 'hỏi', 'opt', ['person', 'question']),
-        V('answer', 'answers', 'answered', 'answering', 'answered', 'trả lời', 'opt', ['question']),
-        V('teach', 'teaches', 'taught', 'teaching', 'taught', 'dạy', 'opt', ['subject', 'language', 'person']),
-        V('go to', 'goes to', 'went to', 'going to', 'gone to', 'đi đến', 'req', ['place'], { noPassive: true }),
-      ],
+    disasters: {
+      name: 'Thiên tai', en: 'Unit 9 · Natural Disasters', icon: '🌪️', back: cd(59),
       nouns: [
-        N('', 'English', '3s', ['language', 'subject'], 'tiếng Anh'),
-        N('', 'math', '3s', ['subject'], 'môn toán'),
-        N('', 'history', '3s', ['subject'], 'môn lịch sử'),
-        N('', 'new words', '3p', ['word'], 'từ mới'),
-        N('a', 'book', '3s', ['text'], 'một quyển sách'),
-        N('an', 'email', '3s', ['text'], 'một bức thư điện tử'),
-        N('the', 'report', '3s', ['text', 'task'], 'bản báo cáo'),
-        N('my', 'homework', '3s', ['task'], 'bài tập về nhà'),
-        N('the', 'final exam', '3s', ['exam'], 'kỳ thi cuối kỳ'),
-        N('a', 'question', '3s', ['question'], 'một câu hỏi'),
-        N('the', 'library', '3s', ['place'], 'thư viện'),
-        N('', 'school', '3s', ['place'], 'trường học'),
-        N('our', 'teacher', '3s', ['person'], 'giáo viên của chúng tôi'),
-        N('', 'students', '3p', ['person'], 'các sinh viên'),
+        N('earthquake', 'earthquakes', 'c', ['disaster'], 'động đất', { img: cd(1), copies: 2, def: 'A sudden shaking of the ground.', an: true }),
+        N('flood', 'floods', 'c', ['disaster'], 'lũ lụt', { img: cd(3), copies: 2, def: 'A large amount of water covering land.' }),
+        N('storm', 'storms', 'c', ['disaster'], 'cơn bão', { img: cd(5), copies: 2, def: 'Bad weather with strong wind and rain.' }),
+        N('tornado', 'tornadoes', 'c', ['disaster'], 'lốc xoáy', { img: cd(7), copies: 2, def: 'A very strong wind that moves in a circle.' }),
+        N('building', 'buildings', 'c', ['place'], 'tòa nhà', { img: cd(9), copies: 3, def: 'A place with walls and a roof.' }),
+        N('road', 'roads', 'c', ['place'], 'con đường', { img: cd(12), copies: 3, def: 'A way for people and cars to travel.' }),
+        N('people', 'people', 'pl', ['person'], 'mọi người', { img: cd(15), copies: 2, def: 'Human beings.' }),
+        N('emergency kit', 'emergency kits', 'c', ['thing'], 'bộ đồ dùng khẩn cấp', { img: cd(17), copies: 2, def: 'A bag or box with things needed in an emergency.' }),
+        N('victim', 'victims', 'c', ['person'], 'nạn nhân', { img: cd(19), copies: 2, def: 'A person who suffers because of a disaster.' }),
+      ],
+      verbs: [
+        V('destroy', 'destroys', 'destroyed', 'destroying', 'destroyed', 'phá hủy', 'req', ['place', 'thing'], { img: cd(21), copies: 2, agent: false, def: 'To damage something completely.' }),
+        V('warn', 'warns', 'warned', 'warning', 'warned', 'cảnh báo', 'req', ['person'], { img: cd(23), copies: 2, def: 'To tell someone about danger.' }),
+        V('predict', 'predicts', 'predicted', 'predicting', 'predicted', 'dự báo', 'req', ['disaster'], { img: cd(25), copies: 2, def: 'To say what may happen in the future.' }),
+        V('damage', 'damages', 'damaged', 'damaging', 'damaged', 'làm hư hại', 'req', ['place', 'thing'], { img: cd(27), copies: 2, agent: false, def: 'To harm or break something.' }),
+        V('rescue', 'rescues', 'rescued', 'rescuing', 'rescued', 'giải cứu', 'req', ['person'], { img: cd(29), copies: 2, def: 'To save someone from danger.' }),
+        V('evacuate', 'evacuates', 'evacuated', 'evacuating', 'evacuated', 'sơ tán', 'opt', ['person', 'place'], { img: cd(31), copies: 2, def: 'To move people away from a dangerous place.' }),
+        V('prepare', 'prepares', 'prepared', 'preparing', 'prepared', 'chuẩn bị', 'opt', ['thing'], { img: cd(32), copies: 1, def: 'To get ready for something.' }),
+        V('cause', 'causes', 'caused', 'causing', 'caused', 'gây ra', 'req', ['disaster'], { img: cd(34), copies: 2, agent: false, def: 'To make something happen.' }),
       ],
       adjs: [
-        A('difficult', 'adj', 'khó', ['subject', 'language', 'exam', 'task', 'question', 'text']),
-        A('easy', 'adj', 'dễ', ['subject', 'language', 'exam', 'task', 'question', 'text']),
-        A('interesting', 'adj', 'thú vị', ['subject', 'language', 'text', 'person']),
-        A('good', 'adj', 'giỏi, tốt', ['person', 'text', 'subject']),
-        A('ready', 'adj', 'sẵn sàng', ['person']),
-        A('nervous', 'adj', 'lo lắng', ['person']),
-        A('carefully', 'adv', 'một cách cẩn thận'),
-        A('well', 'adv', 'tốt, giỏi'),
-        A('quietly', 'adv', 'một cách yên lặng'),
-        A('in class', 'place', 'trong lớp'),
-        A('at the library', 'place', 'ở thư viện'),
+        A('dangerous', 'dangerously', 'nguy hiểm', ['disaster', 'place', 'thing'], { img: cd(36), copies: 2, def: 'Able or likely to cause harm.' }),
+        A('heavy', 'heavily', 'nặng, lớn (mưa, bão)', ['disaster', 'thing'], { img: cd(38), copies: 2, def: 'Large in amount or force.' }),
+        A('violent', 'violently', 'dữ dội', ['disaster', 'person'], { img: cd(40), copies: 2, def: 'Very strong and dangerous.' }),
+        A('safe', 'safely', 'an toàn', ['person', 'place', 'thing'], { img: cd(42), copies: 2, def: 'Not in danger.' }),
+        A('serious', 'seriously', 'nghiêm trọng', ['disaster', 'person'], { img: cd(44), copies: 2, def: 'Bad or important enough to cause concern.' }),
+        A('strong', 'strongly', 'mạnh', ['disaster', 'person', 'place', 'thing'], { img: cd(46), copies: 2, def: 'Having great power or force.' }),
       ],
+      actions: { draw2: cd(48), draw4: cd(50), exchange: cd(52), steal: cd(54), addword: cd(56) },
     },
-    travel: {
-      name: 'Du lịch & giải trí',
-      en: 'Travel & Free Time',
-      icon: '🧳',
-      verbs: [
-        V('visit', 'visits', 'visited', 'visiting', 'visited', 'thăm', 'req', ['place', 'person']),
-        V('travel to', 'travels to', 'traveled to', 'traveling to', 'traveled to', 'du lịch đến', 'req', ['place'], { noPassive: true }),
-        V('take', 'takes', 'took', 'taking', 'taken', 'chụp / đi (xe)', 'req', ['photo', 'transport']),
-        V('ride', 'rides', 'rode', 'riding', 'ridden', 'đạp, cưỡi (xe)', 'req', ['transport']),
-        V('play', 'plays', 'played', 'playing', 'played', 'chơi', 'opt', ['sport', 'instrument']),
-        V('enjoy', 'enjoys', 'enjoyed', 'enjoying', 'enjoyed', 'thích thú, tận hưởng', 'req', ['activity', 'place', 'food', 'media']),
-        V('meet', 'meets', 'met', 'meeting', 'met', 'gặp', 'req', ['person']),
-        V('book', 'books', 'booked', 'booking', 'booked', 'đặt (phòng, vé)', 'req', ['room', 'ticket']),
-        V('swim', 'swims', 'swam', 'swimming', 'swum', 'bơi', 'none', null),
-        V('walk', 'walks', 'walked', 'walking', 'walked', 'đi bộ', 'none', null),
-        V('dance', 'dances', 'danced', 'dancing', 'danced', 'nhảy, múa', 'none', null),
-        V('look', 'looks', 'looked', 'looking', 'looked', 'trông có vẻ', 'adj', null, { noPassive: true }),
-      ],
+    environment: {
+      name: 'Bảo vệ môi trường', en: 'Environmental Protection', icon: '🌱', back: cs(57),
       nouns: [
-        N('', 'Da Lat', '3s', ['place'], 'Đà Lạt'),
-        N('', 'Sa Dec', '3s', ['place'], 'Sa Đéc'),
-        N('the', 'beach', '3s', ['place'], 'bãi biển'),
-        N('a', 'museum', '3s', ['place'], 'một bảo tàng'),
-        N('', 'photos', '3p', ['photo'], 'những bức ảnh'),
-        N('a', 'bus', '3s', ['transport'], 'một chiếc xe buýt'),
-        N('a', 'bike', '3s', ['transport'], 'một chiếc xe đạp'),
-        N('', 'football', '3s', ['sport'], 'bóng đá'),
-        N('', 'badminton', '3s', ['sport'], 'cầu lông'),
-        N('the', 'guitar', '3s', ['instrument'], 'đàn ghi-ta'),
-        N('a', 'hotel room', '3s', ['room'], 'một phòng khách sạn'),
-        N('', 'tickets', '3p', ['ticket'], 'những tấm vé'),
-        N('the', 'trip', '3s', ['activity'], 'chuyến đi'),
-        N('my', 'friends', '3p', ['person'], 'những người bạn của tôi'),
+        N('pollution', 'pollution', 'u', ['problem'], 'sự ô nhiễm', { img: ce(1), copies: 2, def: 'Dirty or harmful substances in the environment.' }),
+        N('habitat', 'habitats', 'c', ['place'], 'môi trường sống', { img: ce(3), copies: 2, def: 'The natural home of an animal or plant.' }),
+        N('carbon dioxide', 'carbon dioxide', 'u', ['gas', 'problem'], 'khí CO₂', { img: ce(5), copies: 2, def: 'A gas that people and animals breathe out and plants use to grow.' }),
+        N('endangered species', 'endangered species', 'sp', ['animal'], 'loài có nguy cơ tuyệt chủng', { img: ce(7), copies: 2, def: 'Types of animals or plants that may disappear forever.' }),
+        N('single-use product', 'single-use products', 'c', ['waste', 'thing'], 'sản phẩm dùng một lần', { img: ce(9), copies: 2, def: 'Products that are used once and then thrown away.' }),
+        N('rubbish', 'rubbish', 'u', ['waste'], 'rác', { img: ce(11), copies: 3, def: 'Things that people do not want and throw away.' }),
+        N('tree', 'trees', 'c', ['plant'], 'cây', { img: ce(14), copies: 2, def: 'A tall plant with a hard trunk and branches.' }),
+        N('environment', 'environments', 'c', ['place'], 'môi trường', { img: ce(16), copies: 2, def: 'The natural world around us, including air, water, and land.' }),
+        N('water pollution', 'water pollution', 'u', ['problem'], 'ô nhiễm nguồn nước', { img: ce(18), copies: 2, def: 'Dirty or harmful substances in water.' }),
+        N('plastic waste', 'plastic waste', 'u', ['waste'], 'rác thải nhựa', { img: ce(20), copies: 1, def: 'Plastic things that people throw away.' }),
+        N('forest', 'forests', 'c', ['place', 'plant'], 'rừng', { img: ce(21), copies: 2, def: 'A large area of land covered with many trees.' }),
+      ],
+      verbs: [
+        V('protect', 'protects', 'protected', 'protecting', 'protected', 'bảo vệ', 'req', ['place', 'animal', 'plant'], { img: ce(23), copies: 2, def: 'To keep someone or something safe from harm.' }),
+        V('reduce', 'reduces', 'reduced', 'reducing', 'reduced', 'giảm', 'req', ['problem', 'waste', 'gas'], { img: ce(25), copies: 3, def: 'To make something smaller or less.' }),
+        V('plant', 'plants', 'planted', 'planting', 'planted', 'trồng', 'req', ['plant'], { img: ce(28), copies: 2, def: 'To put a seed or plant into the ground so it can grow.' }),
+        V('recycle', 'recycles', 'recycled', 'recycling', 'recycled', 'tái chế', 'opt', ['waste', 'thing'], { img: ce(30), copies: 2, def: 'To use old materials again to make new things.' }),
+        V('avoid', 'avoids', 'avoided', 'avoiding', 'avoided', 'tránh', 'req', ['waste', 'thing', 'problem'], { img: ce(32), copies: 2, def: 'To stay away from someone or something.' }),
+        V('save', 'saves', 'saved', 'saving', 'saved', 'cứu, giữ gìn', 'req', ['animal', 'plant', 'place'], { img: ce(34), copies: 2, def: 'To keep something safe or stop it from being wasted.' }),
+        V('stop', 'stops', 'stopped', 'stopping', 'stopped', 'ngăn chặn', 'req', ['problem', 'waste'], { img: ce(36), copies: 2, def: 'To finish an activity or make something finish.' }),
+        V('pick up', 'picks up', 'picked up', 'picking up', 'picked up', 'nhặt', 'req', ['waste', 'thing'], { img: ce(38), copies: 2, def: 'To lift something from the ground or a surface.' }),
+        V('clean up', 'cleans up', 'cleaned up', 'cleaning up', 'cleaned up', 'dọn sạch', 'req', ['place', 'waste'], { img: ce(40), copies: 2, def: 'To make a place clean and tidy.' }),
       ],
       adjs: [
-        A('beautiful', 'adj', 'đẹp', ['place', 'photo', 'person']),
-        A('famous', 'adj', 'nổi tiếng', ['place', 'person']),
-        A('cheap', 'adj', 'rẻ', ['ticket', 'room', 'transport', 'food']),
-        A('excited', 'adj', 'hào hứng', ['person']),
-        A('relaxed', 'adj', 'thư giãn', ['person']),
-        A('fun', 'adj', 'vui', ['activity', 'sport', 'place']),
-        A('happily', 'adv', 'một cách vui vẻ'),
-        A('together', 'adv', 'cùng nhau'),
-        A('fast', 'adv', 'nhanh'),
-        A('in the park', 'place', 'trong công viên'),
-        A('by the river', 'place', 'bên bờ sông'),
+        A('harmful', 'harmfully', 'có hại', ['problem', 'gas', 'waste', 'thing'], { img: ce(42), copies: 2, def: 'Causing damage or injury to someone or something.' }),
+        A('natural', 'naturally', 'tự nhiên', ['place', 'plant', 'gas'], { img: ce(44), copies: 2, def: 'Existing in nature and not made by people.' }),
+        A('dangerous', 'dangerously', 'nguy hiểm', ['problem', 'gas', 'waste', 'thing', 'place', 'animal'], { img: ce(46), copies: 2, def: 'Able or likely to cause harm or injury.' }),
       ],
+      actions: { draw2: ce(48), draw4: ce(50), exchange: ce(52), steal: ce(54), addword: ce(56) },
     },
   };
 
-  // ---------- Thẻ hỗ trợ ----------
+  // Thẻ cố định (bộ Core): người quản trò ghi từ lên thẻ trước khi chơi
+  const core = { S: 'assets/cards/core/1.webp', AUX: 'assets/cards/core/7.webp', T: 'assets/cards/core/13.webp', back: 'assets/cards/core/20.webp' };
+
+  // ---------- Thẻ chức năng (luật mục A.2) ----------
   const actions = {
-    draw2: { name: 'Rút thêm', en: 'Word Rush', glyph: '🃏', desc: 'Rút 2 lá từ bộ bài.' },
-    erase: { name: 'Xóa từ', en: 'Eraser', glyph: '🧽', desc: 'Đối thủ phải bỏ ngẫu nhiên 1 lá trên tay.', targetOpp: true },
-    swap: { name: 'Đổi bài', en: 'Word Swap', glyph: '🔄', desc: 'Lấy ngẫu nhiên 1 lá trên tay đối thủ, rồi đưa lại cho họ 1 lá do bạn chọn.', targetOpp: true },
-    lock: { name: 'Khóa thẻ', en: 'Lock', glyph: '🔒', desc: 'Chọn 1 thẻ cố định của đối thủ: thẻ đó bị khóa trong lượt kế tiếp của họ.', targetOpp: true },
-    refresh: { name: 'Làm mới', en: 'Refresh', glyph: '♻️', desc: 'Bỏ bao nhiêu lá trên tay tùy ý, rồi rút lại đúng bấy nhiêu lá.' },
-    combo: { name: 'Câu ghép ×2', en: 'Combo Bonus', glyph: '✖️2', desc: 'Trong lượt này, câu đúng có dùng thẻ liên kết (L) được tính 2 điểm.' },
-    shield: { name: 'Lá chắn', en: 'Shield', glyph: '🛡️', desc: 'Úp lên sân (tối đa 2). Khi đối thủ dùng thẻ hành động nhắm vào bạn, lật lên để vô hiệu hóa thẻ đó.', set: true },
+    draw2: { name: '+2', en: 'Draw 2', glyph: '➕2', desc: 'Rút 2 lá bài.', copies: 2 },
+    draw4: { name: '+4', en: 'Draw 4', glyph: '➕4', desc: 'Rút 4 lá bài.', copies: 2 },
+    steal: { name: 'STEAL', en: 'Steal', glyph: '💰', desc: 'Cướp ngẫu nhiên 1 lá bài từ tay một người chơi khác.', copies: 2, target: true },
+    exchange: { name: 'Exchange Card', en: 'Exchange', glyph: '🔄', desc: 'Đổi 1 lá bài của bạn lấy 1 lá ngẫu nhiên của một người chơi khác.', copies: 2, target: true },
+    refresh: { name: 'Refresh', en: 'Refresh', glyph: '♻️', desc: 'Bỏ hết lá bài trên tay và rút lại đúng số lá tương ứng.', copies: 2 },
   };
+  const ADDWORD = { copies: 3, desc: 'Thay thế bất cứ lá bài nào mà bạn muốn sử dụng (chọn 1 từ bất kỳ).' };
 
-  const FOCUS = {
-    present: 'Hiện tại đơn (+ can/should)',
-    past: 'Quá khứ đơn',
-    future: 'Tương lai đơn (will)',
-    progressive: 'Thì tiếp diễn',
-    perfect: 'Hiện tại hoàn thành',
+  // Luật đặt câu của quản trò (luật mục B)
+  const RULES = {
+    present: { name: 'Thì hiện tại đơn', tenses: ['present', 'bePres', 'passivePres'], aux: (a) => (a.kind === 'do' || a.kind === 'be') && a.tense === 'present', time: ['habit', 'freq', 'any'] },
+    past: { name: 'Thì quá khứ đơn', tenses: ['past', 'bePast', 'passivePast'], aux: (a) => (a.kind === 'do' || a.kind === 'be') && a.tense === 'past', time: ['past', 'freq', 'any'] },
+    future: { name: 'Thì tương lai đơn (will)', tenses: ['future'], aux: (a) => a.tense === 'future', time: ['future', 'any'] },
+    progressive: { name: 'Thì hiện tại tiếp diễn', tenses: ['presProg'], aux: (a) => a.kind === 'be' && a.tense === 'present', time: ['now', 'any'] },
+    perfect: { name: 'Thì hiện tại hoàn thành', tenses: ['perfect'], aux: (a) => a.kind === 'have', time: ['perfect', 'any'] },
+    modal: { name: 'Động từ khuyết thiếu (can / should)', tenses: ['modal'], aux: (a) => a.tense === 'modal', time: ['habit', 'now', 'future', 'any'] },
+    free: { name: 'Tự do (mọi thì)', tenses: null, aux: () => true, time: null },
   };
 
   const TYPE_INFO = {
@@ -284,9 +252,9 @@
     T: { name: 'Thời gian', en: 'Time', glyph: '⏰' },
     AUX: { name: 'Trợ động từ', en: 'Auxiliary', glyph: '⚙️' },
     L: { name: 'Liên kết', en: 'Linker', glyph: '🔗' },
-    ACTION: { name: 'Hành động', en: 'Action', glyph: '★' },
-    ADDWORD: { name: 'Thêm từ', en: 'Addword', glyph: '✚' },
+    ACTION: { name: 'Chức năng', en: 'Function', glyph: '★' },
+    ADDWORD: { name: 'Addword', en: 'Addword', glyph: '✚' },
   };
 
-  EW.DATA = { subjects, auxes, times, linkers, topics, actions, FOCUS, TYPE_INFO };
+  EW.DATA = { subjects, auxes, times, linkers, topics, core, actions, ADDWORD, RULES, TYPE_INFO };
 })();

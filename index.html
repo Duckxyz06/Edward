@@ -22,7 +22,8 @@
       <h1 class="logo"><img src="assets/logo.png" alt="EdWords – Sentence Duel" /></h1>
       <p class="tagline">Ghép câu tiếng Anh đúng · Vận dụng từ vựng &amp; ngữ pháp · Vượt qua đối thủ</p>
       <nav class="menu">
-        <button class="btn-menu primary" data-go="setup">⚔️ Đấu với máy</button>
+        <button class="btn-menu primary" data-go="setup">✍️ Ghép câu <small>· 4–6 người</small></button>
+        <button class="btn-menu color" data-go="setup-color">🎨 Đấu màu <small>· 2–6 người</small></button>
         <button class="btn-menu" data-go="rules">📜 Luật chơi</button>
         <button class="btn-menu" data-go="library">🗂️ Thư viện thẻ</button>
         <button class="btn-menu" data-go="history">📊 Lịch sử &amp; phiếu theo dõi</button>
@@ -37,32 +38,47 @@
       <header class="page-head"><button class="back" data-go="title">←</button><h2>Thiết lập trận đấu</h2></header>
       <form id="setup-form" class="setup-grid">
         <label class="field"><span>Tên người chơi</span><input name="playerName" maxlength="20" value="Bạn" /></label>
-        <label class="field"><span>Chủ đề từ vựng</span>
-          <select name="topic" id="topic-select"></select>
+        <label class="field"><span>Số người chơi (bạn + máy)</span>
+          <select name="players"><option value="4" selected>4 người</option><option value="5">5 người</option><option value="6">6 người</option></select>
         </label>
-        <fieldset class="field wide">
-          <legend>Cấu trúc ngữ pháp (giảng viên chọn)</legend>
-          <div id="focus-list" class="chips"></div>
+        <label class="field wide"><span>Bộ bài chủ đề</span>
+          <div id="topic-list" class="topic-list"></div>
+        </label>
+        <fieldset class="field wide gm-box">
+          <legend>🎙️ Quản trò: luật đặt câu &amp; từ cho thẻ cố định</legend>
+          <div class="gm-grid">
+            <label class="field"><span>Luật đặt câu</span><select name="rule" id="rule-select"></select></label>
+            <label class="field"><span>Thẻ S (chủ từ)</span><select name="gmS" id="gm-S"></select></label>
+            <label class="field"><span>Thẻ AUX (trợ động từ)</span><select name="gmAUX" id="gm-AUX"></select></label>
+            <label class="field"><span>Thẻ T (thời gian)</span><select name="gmT" id="gm-T"></select></label>
+            <label class="field gm-l"><span>Thẻ L (liên kết)</span><select name="gmL" id="gm-L"></select></label>
+            <div class="field gm-dice"><span>&nbsp;</span><button type="button" class="btn" id="gm-random">🎲 Gợi ý ngẫu nhiên</button></div>
+          </div>
+          <label class="check"><input type="checkbox" name="allowL" id="allow-l" /> <span>Cho phép câu ghép: thêm thẻ L cố định (luật gốc chỉ dùng câu đơn)</span></label>
         </fieldset>
-        <label class="field"><span>Độ khó của máy</span>
+        <label class="field"><span>Độ khó của máy (đặt câu &amp; đánh giá)</span>
           <select name="difficulty">
             <option value="easy">Dễ – máy hay mắc lỗi (luyện bắt lỗi)</option>
             <option value="normal" selected>Vừa</option>
             <option value="hard">Khó</option>
           </select>
         </label>
-        <label class="field"><span>Điểm để thắng</span>
-          <select name="target"><option>3</option><option selected>5</option><option>7</option></select>
+        <label class="field"><span>Thời gian cố định của trận</span>
+          <select name="matchTime"><option value="600">10 phút</option><option value="900" selected>15 phút</option><option value="1200">20 phút</option><option value="1800">30 phút</option><option value="2700">45 phút</option><option value="0">Không giới hạn</option></select>
         </label>
-        <label class="field"><span>Thời gian mỗi lượt</span>
-          <select name="turnTime"><option value="0">Không giới hạn</option><option value="60">60 giây</option><option value="120" selected>120 giây</option><option value="180">180 giây</option></select>
+        <label class="field"><span>Kết thúc sớm khi đạt</span>
+          <select name="target"><option value="0" selected>Không – chơi hết giờ</option><option value="5">5 điểm</option><option value="7">7 điểm</option><option value="10">10 điểm</option></select>
         </label>
-        <label class="field"><span>Thời gian trận (buổi 45–60 phút)</span>
-          <select name="matchTime"><option value="0" selected>Không giới hạn</option><option value="600">10 phút</option><option value="900">15 phút</option><option value="1200">20 phút</option></select>
+        <label class="field"><span>Thời gian mỗi lượt của bạn</span>
+          <select name="turnTime"><option value="0">Không giới hạn</option><option value="60">60 giây</option><option value="90" selected>90 giây</option><option value="120">120 giây</option></select>
         </label>
-        <label class="field wide"><span>Âm lượng nhạc nền</span><input type="range" min="0" max="100" data-music-volume /></label>
+        <label class="field"><span>Tốc độ lượt của máy</span>
+          <select name="aiSpeed"><option value="normal" selected>Chuẩn</option><option value="fast">Nhanh</option></select>
+        </label>
+        <label class="field"><span>Âm lượng nhạc nền</span><input type="range" min="0" max="100" data-music-volume /></label>
         <label class="check"><input type="checkbox" name="assist" /> <span>Chế độ luyện tập: hiện gợi ý ngữ pháp khi đang ghép câu</span></label>
-        <label class="check"><input type="checkbox" name="speaking" /> <span>Luyện nói: đọc to câu vào micro trước khi chấm <small id="mic-note"></small></span></label>
+        <label class="check"><input type="checkbox" name="assistDraw" /> <span>Rút bổ trợ khi trên tay không có thẻ động từ (luật tùy chọn)</span></label>
+        <label class="check"><input type="checkbox" name="speaking" /> <span>Luyện nói: đọc to câu vào micro trước khi đánh giá <small id="mic-note"></small></span></label>
         <div class="wide actions-row"><button type="submit" class="btn big primary">Bắt đầu ⚔️</button></div>
       </form>
     </div>
@@ -74,39 +90,42 @@
       <header class="page-head"><button class="back" data-go="title">←</button><h2>Luật chơi</h2></header>
       <div class="rules">
         <div class="rule-card">
-          <h3>🎯 Mục tiêu</h3>
-          <p>Ghép thẻ thành <b>câu tiếng Anh đúng ngữ pháp</b>. Mỗi câu đúng được <b>1 điểm</b>. Ai đạt <b>5 điểm</b> trước sẽ thắng. Nếu trận có giới hạn thời gian, người nhiều điểm hơn khi hết giờ sẽ thắng.</p>
+          <h3>🃏 A. Cấu trúc bộ bài</h3>
+          <p><b>1. Lá bài cố định</b> (bộ Core): <b>S</b> – chủ từ, <b>AUX</b> – trợ động từ, <b>T</b> – thời gian / điều kiện. Quản trò ghi từ lên các thẻ này.</p>
+          <p><b>2. Bộ bài chủ đề</b>: lá <b>N</b> (danh từ, cụm danh từ), <b>V</b> (động từ, cụm động từ), <b>A</b> (tính từ, trạng từ), lá chức năng và lá Addword.</p>
+          <ul id="action-legend"></ul>
         </div>
         <div class="rule-card">
-          <h3>🃏 Bộ thẻ</h3>
-          <ul class="type-legend" id="type-legend"></ul>
-        </div>
-        <div class="rule-card">
-          <h3>🧭 Sân đấu</h3>
-          <p>Mỗi người có <b>5 lá trên tay</b> và <b>6 thẻ cố định</b> (2 S, 1 T, 2 AUX, 1 L). Quản trò công bố các thẻ này trước trận. Thẻ cố định được dùng lại mỗi lượt, mỗi thẻ chỉ một lần trong một câu.</p>
-        </div>
-        <div class="rule-card">
-          <h3>⏱️ Các phase trong lượt</h3>
-          <ol>
-            <li><b>Draw:</b> rút 1 lá (người đi trước không rút ở lượt đầu).</li>
-            <li><b>Main:</b> dùng thẻ hành động, úp Lá chắn, dùng Addword, rồi ghép câu từ bài trên tay và thẻ cố định. Câu phải dùng ít nhất 1 lá trên tay. Với thẻ V, chọn dạng động từ đúng: V, V-s/es, V2, V-ing, V3.</li>
-            <li><b>Check:</b> quản trò (máy) chấm câu và đọc to câu. Câu đúng thì các lá trên tay đã dùng vào bãi bài. Câu sai thì thẻ được trả lại tay.</li>
-            <li><b>End:</b> trên tay giữ tối đa 8 lá.</li>
-          </ol>
-        </div>
-        <div class="rule-card">
-          <h3>⚠️ Thách đấu – sửa lỗi cho nhau</h3>
-          <p>Khi đối thủ đặt câu, bạn được <b>Chấp nhận</b> hoặc <b>Thách đấu</b> rồi chỉ vào thẻ bạn cho là sai.</p>
+          <h3>🎙️ B. Luật chơi</h3>
           <ul>
-            <li>Câu sai, bạn chỉ đúng chỗ sai: rút <b>2 lá</b>.</li>
-            <li>Câu sai, bạn chỉ sai chỗ: rút <b>1 lá</b>.</li>
-            <li>Câu thực ra đúng: bạn mất 1 lá ngẫu nhiên.</li>
-            <li>Nếu không ai phát hiện lỗi, đối thủ <b>vẫn được điểm</b>. Hãy chú ý!</li>
+            <li>Số người chơi: <b>4–6 người</b> (bạn và các người chơi máy).</li>
+            <li>Quản trò đưa ra <b>luật đặt câu</b> (vd: đặt câu với thì hiện tại đơn) và cung cấp từ cho lá S, T, (L) và AUX.</li>
+            <li>Mỗi người có <b>5 lá trên tay</b> và <b>3 lá cố định</b> trên bàn.</li>
+            <li>Đến lượt: <b>rút 1 lá</b>, dùng lá chức năng để tạo lợi thế, rồi kết hợp bài trên tay với lá cố định thành <b>1 câu đơn hoàn chỉnh</b>.</li>
+            <li>Các thành viên còn lại <b>đánh giá</b> câu: đúng ngữ pháp và đúng nghĩa. Nếu đa số chấp nhận thì được <b>+1 điểm</b>. Hòa phiếu thì quản trò quyết định.</li>
+            <li>Người nhiều điểm nhất khi <b>hết thời gian cố định</b> sẽ giành chiến thắng.</li>
           </ul>
         </div>
         <div class="rule-card">
-          <h3>★ Thẻ hỗ trợ</h3>
-          <ul id="action-legend"></ul>
+          <h3>✍️ Cách ghép câu trong game</h3>
+          <ul>
+            <li>Chạm vào lá trên tay hoặc lá cố định để đưa vào Sentence Zone, dùng ◀ ▶ hoặc kéo thả để đổi thứ tự.</li>
+            <li>Chọn <b>dạng từ</b> ngay dưới mỗi lá: V (V, V-s/es, V2, V-ing, V3) · N (a/an, the, số nhiều) · A (tính từ hoặc trạng từ, như in trên thẻ).</li>
+            <li>Câu phải dùng ít nhất 1 lá trên tay. Câu được chấp nhận thì các lá đã dùng vào bãi bài, nếu không thì trả lại tay.</li>
+            <li>Sau mỗi câu, máy (quản trò) nhận xét lỗi và gợi ý câu đúng để cả nhóm học.</li>
+          </ul>
+        </div>
+        <div class="rule-card">
+          <h3>🔤 Các loại lá</h3>
+          <ul class="type-legend" id="type-legend"></ul>
+        </div>
+        <div class="rule-card">
+          <h3>🎨 Chế độ Đấu màu</h3>
+          <ul id="color-rules"></ul>
+        </div>
+        <div class="rule-card">
+          <h3>📝 C. Lưu ý</h3>
+          <p>Luật chơi có thể thay đổi tùy vào mục đích và ngữ cảnh sử dụng: giảng viên chọn luật đặt câu, thời gian trận, điểm kết thúc sớm và các luật tùy chọn ở màn hình thiết lập.</p>
         </div>
       </div>
     </div>
@@ -155,21 +174,13 @@
 
     <main id="field">
       <div class="arena-floor"></div>
-      <div class="side opp">
-        <div class="row">
-          <div class="pinfo" id="opp-info"></div>
-          <div class="zone-wrap"><div class="zone-label">Thẻ cố định</div><div class="zone fixed" id="opp-fixed"></div></div>
-          <div class="zone-wrap"><div class="zone-label">Úp</div><div class="zone setz" id="opp-set"></div></div>
-          <div class="zone-wrap"><div class="zone-label">Tay</div><div class="hand opp-hand" id="opp-hand"></div></div>
-          <div class="piles" id="opp-piles"></div>
-        </div>
-      </div>
+      <div id="seats" class="seats"></div>
 
       <div id="board">
         <div id="phase-bar"></div>
         <div class="tablet">
           <div class="tablet-plaque"><span>Sentence Zone</span></div>
-          <div class="tablet-sub">Ghép một câu tiếng Anh đúng để ghi điểm!</div>
+          <div class="tablet-sub" id="rule-sub">Ghép một câu tiếng Anh đúng để ghi điểm!</div>
           <div id="sentence-zone" class="sentence-zone"></div>
           <div id="sentence-preview" class="preview"></div>
           <div id="assist" class="assist"></div>
@@ -185,8 +196,7 @@
         <div class="row">
           <div class="pinfo" id="my-info"></div>
           <div class="zone-wrap"><div class="zone-label">Thẻ cố định</div><div class="zone fixed" id="my-fixed"></div></div>
-          <div class="zone-wrap"><div class="zone-label">Úp</div><div class="zone setz" id="my-set"></div></div>
-          <div class="piles" id="my-piles"></div>
+          <div class="piles" id="piles"></div>
         </div>
         <div class="hand my-hand" id="my-hand"></div>
       </div>
@@ -200,6 +210,8 @@
         <div class="turn-stats" id="turn-stats"></div>
       </div>
       <div id="prompt-panel" class="prompt-panel"></div>
+      <div class="order-title">Thứ tự lượt</div>
+      <div id="turn-order" class="turn-order"></div>
       <div class="log-title">Nhật ký trận đấu</div>
       <div id="log" class="log"></div>
     </aside>

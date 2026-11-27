@@ -8,9 +8,9 @@
   const G = () => EW.Grammar;
 
   const LEVELS = {
-    easy: { name: 'Dễ', errorRate: 0.35, pickTop: 0.5, actionRate: 0.35, useLinker: 0.2 },
-    normal: { name: 'Vừa', errorRate: 0.22, pickTop: 0.2, actionRate: 0.6, useLinker: 0.6 },
-    hard: { name: 'Khó', errorRate: 0.1, pickTop: 0, actionRate: 0.85, useLinker: 0.9 },
+    easy: { name: 'Dễ', errorRate: 0.35, pickTop: 0.5, actionRate: 0.4, useLinker: 0.2, judgeAcc: 0.7 },
+    normal: { name: 'Vừa', errorRate: 0.22, pickTop: 0.2, actionRate: 0.65, useLinker: 0.6, judgeAcc: 0.85 },
+    hard: { name: 'Khó', errorRate: 0.1, pickTop: 0, actionRate: 0.9, useLinker: 0.9, judgeAcc: 0.95 },
   };
 
   // pool: [{key, card, src, handUid?}] — key duy nhất cho mỗi thẻ có thể dùng
@@ -28,7 +28,7 @@
     const tryItems = (arr) => {
       const keys = arr.map((x) => x.key);
       if (new Set(keys).size !== keys.length) return;
-      const items = arr.map((x) => ({ card: x.card, form: x.form || 'base' }));
+      const items = arr.map((x) => ({ card: x.card, form: x.form || G().defaultForm(x.card) }));
       const r = G().validate(items);
       if (!r.ok || seen.has(r.text)) return;
       seen.add(r.text);
@@ -85,6 +85,12 @@
     const seen = new Set();
     return EW.Grammar.FORM_KEYS.filter((k) => (seen.has(v.forms[k]) ? false : seen.add(v.forms[k])));
   }
+  // Thẻ N / A có nhiều dạng (a/the/số nhiều; tính từ/trạng từ) → mỗi dạng là một lựa chọn (cùng key)
+  function expand(entry) {
+    const c = entry.card;
+    if ((c.type === 'N' && c.count) || (c.type === 'A' && c.aforms)) return G().formOptions(c).map((o) => ({ ...entry, form: o.key }));
+    return [entry];
+  }
 
   function score(c) {
     const hand = c.parts.filter((p) => p.src === 'hand').length;
@@ -95,9 +101,10 @@
   /** Tìm câu tốt nhất cho người chơi `pl` của trận `duel` */
   function bestSentence(duel, pl, opts = {}) {
     const pool = [];
-    pl.hand.forEach((c) => { if (!['ACTION', 'ADDWORD'].includes(c.type)) pool.push({ key: c.uid, card: c, src: 'hand', handUid: c.uid }); });
-    pl.fixed.forEach((c) => { if (!pl.locked || pl.locked !== c.uid) pool.push({ key: c.uid, card: c, src: 'fixed' }); });
-    if (opts.extra) pool.push(opts.extra);
+    const add = (e) => pool.push(...expand(e));
+    pl.hand.forEach((c) => { if (!['ACTION', 'ADDWORD'].includes(c.type)) add({ key: c.uid, card: c, src: 'hand', handUid: c.uid }); });
+    pl.fixed.forEach((c) => add({ key: c.uid, card: c, src: 'fixed' }));
+    if (opts.extra) add(opts.extra);
     let clauses = findClauses(pool.filter((p) => p.card.type !== 'L'), 400, { questions: true });
     clauses = clauses.filter((c) => c.parts.some((p) => p.src === 'hand' || p.src === 'addword'));
     // câu ghép
@@ -113,7 +120,7 @@
         for (const l of linkers) {
           const parts = [...x.parts, l, ...y.parts];
           if (!parts.some((p) => p.src === 'hand' || p.src === 'addword')) continue;
-          const r = G().validate(parts.map((p) => ({ card: p.card, form: p.form || 'base' })));
+          const r = G().validate(parts.map((p) => ({ card: p.card, form: p.form || G().defaultForm(p.card) })));
           if (r.ok) clauses.push({ parts, text: r.text, linker: true });
         }
       }
@@ -129,7 +136,8 @@
   function injectError(parts) {
     const muts = [];
     parts.forEach((p, i) => {
-      if (p.card.type === 'V') uniqForms(p.card).forEach((f) => { if (f !== p.form) muts.push(() => { const c = parts.slice(); c[i] = { ...p, form: f }; return c; }); });
+      const fo = G().formOptions(p.card);
+      if (fo) fo.forEach((o) => { if (o.key !== p.form) muts.push(() => { const c = parts.slice(); c[i] = { ...p, form: o.key }; return c; }); });
     });
     const tIdx = parts.findIndex((p) => p.card.type === 'T');
     if (tIdx > 0) {
@@ -141,7 +149,7 @@
     for (let tries = 0; tries < 12 && muts.length; tries++) {
       const m = muts.splice(Math.floor(Math.random() * muts.length), 1)[0];
       const c = m();
-      const r = G().validate(c.map((p) => ({ card: p.card, form: p.form || 'base' })));
+      const r = G().validate(c.map((p) => ({ card: p.card, form: p.form || G().defaultForm(p.card) })));
       if (!r.ok) return c;
     }
     return null;
@@ -149,85 +157,79 @@
 
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
-  async function takeTurn(duel) {
-    const me = duel.players[1];
-    const opp = duel.players[0];
-    const level = LEVELS[duel.cfg.difficulty];
-    await wait(900);
-    if (duel.over) return;
-
+  async function takeTurn(game) {
+    const me = game.cur;
+    const level = LEVELS[game.cfg.difficulty];
+    const fast = game.cfg.aiSpeed === 'fast';
+    const pause = (ms) => wait(fast ? ms * 0.45 : ms);
+    await pause(800);
+    if (game.over) return;
     const findAct = (key) => me.hand.find((c) => c.type === 'ACTION' && c.action === key);
-    // Úp lá chắn
-    for (const sh of me.hand.filter((c) => c.type === 'ACTION' && c.action === 'shield')) {
-      if (me.set.length < 2) { await duel.setShield(me, sh.uid); await wait(500); }
-    }
-    // Rút thêm khi bài ít
-    let c = findAct('draw2');
-    if (c && me.hand.length <= 6) { await duel.activate(me, c.uid); await wait(700); }
+    const rivals = () => game.others(me).filter((x) => x.hand.length);
+    // người đang dẫn đầu (ưu tiên người có nhiều bài nếu bằng điểm)
+    const leader = () => rivals().sort((a, b) => b.score - a.score || b.hand.length - a.hand.length)[0];
 
-    // Hành động tấn công
-    if (Math.random() < level.actionRate) {
-      c = findAct('erase');
-      if (c && opp.hand.length >= 4) { await duel.activate(me, c.uid); await wait(700); }
+    // +2 / +4 khi bài ít
+    for (const k of ['draw4', 'draw2']) {
+      const c = findAct(k);
+      if (c && me.hand.length <= 6) { await game.activate(me, c.uid); await pause(600); }
     }
-    if (Math.random() < level.actionRate * 0.8) {
-      c = findAct('lock');
-      if (c) {
-        const target = opp.fixed.find((f) => f.type === 'AUX') || opp.fixed[0];
-        await duel.activate(me, c.uid, { target: target.uid });
-        await wait(700);
+    // STEAL / Exchange nhắm vào người dẫn đầu
+    let c = findAct('steal');
+    if (c && rivals().length && Math.random() < level.actionRate) { await game.activate(me, c.uid, { target: leader() }); await pause(600); }
+    if (game.over) return;
+
+    let best = bestSentence(game, me);
+    c = findAct('exchange');
+    if (c && rivals().length && Math.random() < level.actionRate * 0.7) {
+      const mine = me.hand.filter((x) => x.uid !== c.uid && !(best && best.parts.some((p) => p.handUid === x.uid)));
+      if (mine.length) {
+        const worst = mine.sort((a, b) => rank(a) - rank(b))[0];
+        await game.activate(me, c.uid, { target: leader(), give: worst.uid });
+        await pause(600);
+        best = bestSentence(game, me);
       }
     }
-    if (Math.random() < level.actionRate * 0.5) {
-      c = findAct('swap');
-      if (c && opp.hand.length) { await duel.activate(me, c.uid); await wait(700); }
-    }
-    if (duel.over) return;
-
-    let best = bestSentence(duel, me);
-    // Thẻ Addword: thử thêm một từ từ ngân hàng
+    // Addword: thử thêm một từ từ ngân hàng
     const aw = me.hand.find((x) => x.type === 'ADDWORD');
     if (aw && (!best || best.parts.length < 5)) {
-      const cands = EW.Deck.wordBank(duel.cfg).filter((w) => ['V', 'N', 'A'].includes(w.type));
+      const cands = EW.Deck.wordBank(game.cfg).filter((w) => ['V', 'N', 'A'].includes(w.type));
       let bestAw = null;
       for (let n = 0; n < 8; n++) {
         const w = cands[Math.floor(Math.random() * cands.length)];
         const extra = { key: 'aw-' + w.id, card: { ...w, uid: 'aw-' + w.id }, src: 'addword', handUid: aw.uid };
-        const s = bestSentence(duel, me, { extra });
-        if (s && (!bestAw || s.score > bestAw.score)) bestAw = s;
+        const s2 = bestSentence(game, me, { extra });
+        if (s2 && (!bestAw || s2.score > bestAw.score)) bestAw = s2;
       }
       if (bestAw && (!best || bestAw.score > best.score + 1)) best = bestAw;
     }
+    // Refresh khi không ghép được câu
     if (!best) {
       c = findAct('refresh');
-      if (c) {
-        await duel.activate(me, c.uid, { discard: me.hand.filter((x) => x.type !== 'ACTION' && x.type !== 'ADDWORD').map((x) => x.uid).slice(0, 3) });
-        await wait(700);
-        best = bestSentence(duel, me);
-      }
+      if (c) { await game.activate(me, c.uid); await pause(600); best = bestSentence(game, me); }
     }
-    if (duel.over) return;
+    if (game.over) return;
     if (!best) {
-      duel.log(`${me.name} không ghép được câu và bỏ lượt.`, 'opp');
-      await wait(600);
-      return duel.endTurn();
+      game.log(`${me.name} chưa ghép được câu và bỏ lượt.`, 'opp');
+      await pause(500);
+      return game.endTurn();
     }
-    c = findAct('combo');
-    if (c && best.linker) { await duel.activate(me, c.uid); await wait(600); }
-
     let parts = best.parts;
-    let intended = true;
     if (Math.random() < level.errorRate) {
       const bad = injectError(parts);
-      if (bad) { parts = bad; intended = false; }
+      if (bad) parts = bad;
     }
     for (const p of parts) {
-      if (duel.over) return;
-      duel.aiPlace(me, p);
-      await wait(380);
+      if (game.over) return;
+      game.aiPlace(me, p);
+      await pause(330);
     }
-    await wait(500);
-    await duel.submit(me, { intendedCorrect: intended });
+    await pause(450);
+    await game.submit(me);
+  }
+
+  function rank(c) {
+    return { ACTION: 6, ADDWORD: 9, V: 8, N: 5, A: 3, S: 2, T: 1, AUX: 2, L: 0 }[c.type] || 0;
   }
 
   EW.AI = { takeTurn, bestSentence, LEVELS };
